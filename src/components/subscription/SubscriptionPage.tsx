@@ -1,65 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
 import { products, Product } from '../../stripe-config';
 import { CreditCard, Check, Loader, Star, Zap } from 'lucide-react';
 
-interface UserSubscription {
-  subscription_status: string;
-  price_id: string | null;
-  current_period_end: number | null;
-  cancel_at_period_end: boolean;
-}
-
 const SubscriptionPage: React.FC = () => {
-  const [loading, setLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
-  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchSubscription();
-  }, []);
-
-  const fetchSubscription = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('stripe_user_subscriptions')
-        .select('subscription_status, price_id, current_period_end, cancel_at_period_end')
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching subscription:', error);
-        setMessage({ type: 'error', text: 'Failed to load subscription data' });
-      } else {
-        setSubscription(data);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      setMessage({ type: 'error', text: 'An unexpected error occurred' });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCheckout = async (product: Product) => {
     setCheckoutLoading(product.id);
     setMessage(null);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate('/login');
-        return;
-      }
-
+      // For demo purposes without authentication, we'll create a simple checkout
+      // In a real app, you'd need some form of user identification
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -67,6 +25,7 @@ const SubscriptionPage: React.FC = () => {
           mode: product.mode,
           success_url: `${window.location.origin}/success`,
           cancel_url: `${window.location.origin}/subscription`,
+          customer_email: 'demo@example.com', // Demo email for testing
         }),
       });
 
@@ -88,35 +47,6 @@ const SubscriptionPage: React.FC = () => {
       setCheckoutLoading(null);
     }
   };
-
-  const getSubscriptionStatus = () => {
-    if (!subscription) return null;
-
-    const isActive = subscription.subscription_status === 'active';
-    const currentProduct = products.find(p => p.priceId === subscription.price_id);
-    
-    return {
-      isActive,
-      productName: currentProduct?.name || 'Unknown Plan',
-      expiresAt: subscription.current_period_end 
-        ? new Date(subscription.current_period_end * 1000).toLocaleDateString()
-        : null,
-      willCancel: subscription.cancel_at_period_end
-    };
-  };
-
-  const subscriptionStatus = getSubscriptionStatus();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader size={48} className="animate-spin text-blue-500 mx-auto mb-4" />
-          <p className="text-gray-600">Loading subscription data...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
@@ -140,39 +70,13 @@ const SubscriptionPage: React.FC = () => {
           </div>
         )}
 
-        {/* Current Subscription Status */}
-        {subscriptionStatus?.isActive && (
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-6 mb-8">
-            <div className="flex items-center mb-4">
-              <Check size={24} className="text-green-500 mr-3" />
-              <h3 className="text-lg font-semibold text-green-800">Active Subscription</h3>
-            </div>
-            <p className="text-green-700 mb-2">
-              You're currently subscribed to <strong>{subscriptionStatus.productName}</strong>
-            </p>
-            {subscriptionStatus.expiresAt && (
-              <p className="text-green-600 text-sm">
-                {subscriptionStatus.willCancel 
-                  ? `Subscription will end on ${subscriptionStatus.expiresAt}`
-                  : `Next billing date: ${subscriptionStatus.expiresAt}`
-                }
-              </p>
-            )}
-          </div>
-        )}
-
         {/* Products Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {products.map((product) => {
-            const isCurrentPlan = subscriptionStatus?.isActive && 
-              subscription?.price_id === product.priceId;
-            
             return (
               <div
                 key={product.id}
-                className={`bg-white rounded-2xl shadow-lg p-8 relative transition-all duration-300 hover:shadow-xl ${
-                  isCurrentPlan ? 'ring-2 ring-green-500' : ''
-                }`}
+                className="bg-white rounded-2xl shadow-lg p-8 relative transition-all duration-300 hover:shadow-xl"
               >
                 {/* Popular Badge */}
                 {product.name === 'Jio Recharge' && (
@@ -180,15 +84,6 @@ const SubscriptionPage: React.FC = () => {
                     <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-1 rounded-full text-sm font-medium flex items-center">
                       <Star size={14} className="mr-1" />
                       Popular
-                    </div>
-                  </div>
-                )}
-
-                {/* Current Plan Badge */}
-                {isCurrentPlan && (
-                  <div className="absolute -top-4 right-4">
-                    <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      Current Plan
                     </div>
                   </div>
                 )}
@@ -230,11 +125,9 @@ const SubscriptionPage: React.FC = () => {
                 {/* Action Button */}
                 <button
                   onClick={() => handleCheckout(product)}
-                  disabled={checkoutLoading === product.id || isCurrentPlan}
+                  disabled={checkoutLoading === product.id}
                   className={`w-full py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center ${
-                    isCurrentPlan
-                      ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                      : checkoutLoading === product.id
+                    checkoutLoading === product.id
                       ? 'bg-gray-400 text-white cursor-not-allowed'
                       : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 hover:shadow-lg'
                   }`}
@@ -244,8 +137,6 @@ const SubscriptionPage: React.FC = () => {
                       <Loader size={20} className="animate-spin mr-2" />
                       Processing...
                     </>
-                  ) : isCurrentPlan ? (
-                    'Current Plan'
                   ) : (
                     <>
                       <CreditCard size={20} className="mr-2" />

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { supabase } from './lib/supabase';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import SummaryCards from './components/SummaryCards';
@@ -9,55 +8,12 @@ import ReceiptScanner from './components/ReceiptScanner';
 import ExpenseList from './components/ExpenseList';
 import Filters from './components/Filters';
 import Footer from './components/Footer';
-import LoginPage from './components/auth/LoginPage';
-import SignupPage from './components/auth/SignupPage';
 import SubscriptionPage from './components/subscription/SubscriptionPage';
 import SuccessPage from './components/subscription/SuccessPage';
 import { Expense, Currency, TimeFilter, ExpenseFormData } from './types/expense';
 import { loadExpenses, saveExpenses, exportToCSV } from './utils/storage';
 import { categorizeExpense } from './utils/categories';
 import { filterExpensesByTime } from './utils/dateFilters';
-
-// Protected Route Component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>;
-};
 
 // Main App Component
 const MainApp = () => {
@@ -169,25 +125,9 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
         <Route path="/success" element={<SuccessPage />} />
-        <Route 
-          path="/subscription" 
-          element={
-            <ProtectedRoute>
-              <SubscriptionPage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/" 
-          element={
-            <ProtectedRoute>
-              <MainApp />
-            </ProtectedRoute>
-          } 
-        />
+        <Route path="/subscription" element={<SubscriptionPage />} />
+        <Route path="/" element={<MainApp />} />
       </Routes>
     </Router>
   );
