@@ -39,7 +39,8 @@ function getSampleExpenses(): Expense[] {
       description: 'Pizza dinner with friends',
       date: today.toISOString().split('T')[0],
       category: 'Food & Dining',
-      currency: '₹'
+      currency: '₹',
+      source: 'manual'
     },
     {
       id: '2',
@@ -48,7 +49,8 @@ function getSampleExpenses(): Expense[] {
       description: 'Uber ride to office',
       date: yesterday.toISOString().split('T')[0],
       category: 'Transportation',
-      currency: '₹'
+      currency: '₹',
+      source: 'manual'
     },
     {
       id: '3',
@@ -57,7 +59,8 @@ function getSampleExpenses(): Expense[] {
       description: 'New shirt from mall',
       date: lastWeek.toISOString().split('T')[0],
       category: 'Shopping',
-      currency: '₹'
+      currency: '₹',
+      source: 'manual'
     },
     {
       id: '4',
@@ -66,13 +69,14 @@ function getSampleExpenses(): Expense[] {
       description: 'Movie tickets',
       date: lastWeek.toISOString().split('T')[0],
       category: 'Entertainment',
-      currency: '₹'
+      currency: '₹',
+      source: 'manual'
     }
   ];
 }
 
 export function exportToCSV(expenses: Expense[], filename: string = 'expenses.csv'): void {
-  const headers = ['Date', 'Description', 'Category', 'Amount', 'Currency', 'Quantity'];
+  const headers = ['Date', 'Description', 'Category', 'Amount', 'Currency', 'Quantity', 'Source'];
   const csvContent = [
     headers.join(','),
     ...expenses.map(expense => [
@@ -81,7 +85,8 @@ export function exportToCSV(expenses: Expense[], filename: string = 'expenses.cs
       expense.category,
       expense.amount,
       expense.currency,
-      expense.quantity
+      expense.quantity,
+      expense.source || 'manual'
     ].join(','))
   ].join('\n');
 

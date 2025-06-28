@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import SummaryCards from './components/SummaryCards';
@@ -8,8 +9,7 @@ import ReceiptScanner from './components/ReceiptScanner';
 import ExpenseList from './components/ExpenseList';
 import Filters from './components/Filters';
 import Footer from './components/Footer';
-import SubscriptionPage from './components/subscription/SubscriptionPage';
-import SuccessPage from './components/subscription/SuccessPage';
+import BankConnection from './components/BankConnection';
 import { Expense, Currency, TimeFilter, ExpenseFormData } from './types/expense';
 import { loadExpenses, saveExpenses, exportToCSV } from './utils/storage';
 import { categorizeExpense } from './utils/categories';
@@ -44,13 +44,18 @@ const MainApp = () => {
       description: formData.description,
       date: formData.date,
       category: categorizeExpense(formData.description),
-      currency: currency
+      currency: currency,
+      source: 'manual'
     };
 
     setExpenses(prev => [newExpense, ...prev]);
     
     // Clear OCR data after successful submission
     setOcrFormData({});
+  };
+
+  const handleBankTransactions = (transactions: Expense[]) => {
+    setExpenses(prev => [...transactions, ...prev]);
   };
 
   const handleDeleteExpense = (id: string) => {
@@ -99,6 +104,11 @@ const MainApp = () => {
         expenseCount={expenses.length}
       />
       
+      <BankConnection 
+        onTransactionsImported={handleBankTransactions}
+        currency={currency}
+      />
+      
       <ExpenseForm 
         onSubmit={handleAddExpense}
         currency={currency}
@@ -117,6 +127,7 @@ const MainApp = () => {
       />
       
       <Footer />
+      <Toaster position="top-right" />
     </div>
   );
 };
@@ -125,8 +136,6 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/success" element={<SuccessPage />} />
-        <Route path="/subscription" element={<SubscriptionPage />} />
         <Route path="/" element={<MainApp />} />
       </Routes>
     </Router>

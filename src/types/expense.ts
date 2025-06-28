@@ -6,6 +6,7 @@ export interface Expense {
   date: string;
   category: string;
   currency: string;
+  source?: 'manual' | 'bank' | 'receipt';
 }
 
 export type Currency = '₹' | '$' | '€' | '£';
