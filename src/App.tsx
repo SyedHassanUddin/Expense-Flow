@@ -5,16 +5,19 @@ import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import SummaryCards from './components/SummaryCards';
-import ExpenseForm from './components/ExpenseForm';
-import ReceiptScanner from './components/ReceiptScanner';
 import ExpenseList from './components/ExpenseList';
-import Filters from './components/Filters';
 import Footer from './components/Footer';
 import BankConnection from './components/BankConnection';
+import ReceiptScanner from './components/ReceiptScanner';
+import FloatingAddButton from './components/FloatingAddButton';
+import AddExpenseModal from './components/modals/AddExpenseModal';
+import EditExpenseModal from './components/modals/EditExpenseModal';
+import ReminderWidget from './components/ReminderWidget';
 import { Expense, Currency, TimeFilter, ExpenseFormData } from './types/expense';
 import { loadExpenses, saveExpenses, exportToCSV } from './utils/storage';
 import { categorizeExpense } from './utils/categories';
 import { filterExpensesByTime } from './utils/dateFilters';
+import toast from 'react-hot-toast';
 
 // Main App Component
 const MainApp = () => {
@@ -23,6 +26,11 @@ const MainApp = () => {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [ocrFormData, setOcrFormData] = useState<Partial<ExpenseFormData>>({});
+  
+  // Modal states
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
   // Load expenses on mount
   useEffect(() => {
@@ -55,28 +63,43 @@ const MainApp = () => {
     setOcrFormData({});
   };
 
+  const handleEditExpense = (updatedExpense: Expense) => {
+    setExpenses(prev => 
+      prev.map(expense => 
+        expense.id === updatedExpense.id ? updatedExpense : expense
+      )
+    );
+  };
+
   const handleBankTransactions = (transactions: Expense[]) => {
     setExpenses(prev => [...transactions, ...prev]);
   };
 
   const handleDeleteExpense = (id: string) => {
-    setExpenses(prev => prev.filter(expense => expense.id !== id));
+    const expense = expenses.find(e => e.id === id);
+    if (expense) {
+      setExpenses(prev => prev.filter(expense => expense.id !== id));
+      toast.success(`Deleted "${expense.description}" 🗑️`);
+    }
   };
 
   const handleClearAll = () => {
     if (window.confirm('Are you sure you want to delete all expenses? This action cannot be undone.')) {
       setExpenses([]);
       localStorage.removeItem('expenseflow-expenses');
+      toast.success('All expenses cleared! 🧹');
     }
   };
 
   const handleExport = () => {
     const filteredExpenses = filterExpensesByTime(expenses, timeFilter);
     exportToCSV(filteredExpenses, `expenses-${timeFilter}-${new Date().toISOString().split('T')[0]}.csv`);
+    toast.success('Expenses exported successfully! 📊');
   };
 
   const handleOCRDataExtracted = (data: Partial<ExpenseFormData>) => {
     setOcrFormData(data);
+    setIsAddModalOpen(true); // Auto-open modal with OCR data
   };
 
   // Handle currency change - convert existing expenses
@@ -84,9 +107,12 @@ const MainApp = () => {
     if (newCurrency === currency) return;
     
     setCurrency(newCurrency);
-    
-    // Note: The conversion will be handled by SummaryCards component
-    // We don't need to convert the stored expenses, just display them converted
+    toast.success(`Currency changed to ${newCurrency} 💱`);
+  };
+
+  const handleOpenEditModal = (expense: Expense) => {
+    setEditingExpense(expense);
+    setIsEditModalOpen(true);
   };
 
   // Filter expenses based on time and search
@@ -101,7 +127,16 @@ const MainApp = () => {
       <div className="particle w-5 h-5 bg-white/10 top-1/2 right-1/3"></div>
       <div className="particle w-2 h-2 bg-white/20 bottom-32 right-10"></div>
 
-      <Header />
+      <Header 
+        timeFilter={timeFilter}
+        onTimeFilterChange={setTimeFilter}
+        currency={currency}
+        onCurrencyChange={handleCurrencyChange}
+        onExport={handleExport}
+        onClearAll={handleClearAll}
+        expenseCount={expenses.length}
+      />
+      
       <Hero />
       
       <SummaryCards 
@@ -110,27 +145,11 @@ const MainApp = () => {
         timeFilter={timeFilter}
       />
       
-      <Filters
-        timeFilter={timeFilter}
-        onTimeFilterChange={setTimeFilter}
-        currency={currency}
-        onCurrencyChange={handleCurrencyChange}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        onExport={handleExport}
-        onClearAll={handleClearAll}
-        expenseCount={expenses.length}
-      />
+      <ReminderWidget onAddExpense={() => setIsAddModalOpen(true)} />
       
       <BankConnection 
         onTransactionsImported={handleBankTransactions}
         currency={currency}
-      />
-      
-      <ExpenseForm 
-        onSubmit={handleAddExpense}
-        currency={currency}
-        initialData={ocrFormData}
       />
       
       <ReceiptScanner 
@@ -141,10 +160,39 @@ const MainApp = () => {
         expenses={filteredExpenses}
         currency={currency}
         onDelete={handleDeleteExpense}
+        onEdit={handleOpenEditModal}
         searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        onAddExpense={() => setIsAddModalOpen(true)}
       />
       
       <Footer />
+      
+      {/* Floating Add Button */}
+      <FloatingAddButton onClick={() => setIsAddModalOpen(true)} />
+      
+      {/* Modals */}
+      <AddExpenseModal
+        isOpen={isAddModalOpen}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setOcrFormData({});
+        }}
+        onSubmit={handleAddExpense}
+        currency={currency}
+        initialData={ocrFormData}
+      />
+      
+      <EditExpenseModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingExpense(null);
+        }}
+        onSave={handleEditExpense}
+        expense={editingExpense}
+        currency={currency}
+      />
     </div>
   );
 };
@@ -162,11 +210,24 @@ function App() {
         toastOptions={{
           duration: 4000,
           style: {
-            background: 'rgba(255, 255, 255, 0.9)',
+            background: 'rgba(255, 255, 255, 0.95)',
             backdropFilter: 'blur(10px)',
             border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '12px',
             color: '#333',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10B981',
+              secondary: '#FFFFFF',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#EF4444',
+              secondary: '#FFFFFF',
+            },
           },
         }}
       />

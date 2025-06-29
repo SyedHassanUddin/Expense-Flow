@@ -1,10 +1,29 @@
 import React from 'react';
 import { TrendingUp, Moon, Sun } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
-import { Button } from './ui/button';
 import { Switch } from './ui/switch';
+import SettingsDropdown from './SettingsDropdown';
+import { Currency, TimeFilter } from '../types/expense';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  timeFilter: TimeFilter;
+  onTimeFilterChange: (filter: TimeFilter) => void;
+  currency: Currency;
+  onCurrencyChange: (currency: Currency) => void;
+  onExport: () => void;
+  onClearAll: () => void;
+  expenseCount: number;
+}
+
+const Header: React.FC<HeaderProps> = ({
+  timeFilter,
+  onTimeFilterChange,
+  currency,
+  onCurrencyChange,
+  onExport,
+  onClearAll,
+  expenseCount
+}) => {
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -21,8 +40,9 @@ const Header: React.FC = () => {
               </span>
             </div>
 
-            {/* Theme Toggle */}
+            {/* Right Side Controls */}
             <div className="flex items-center space-x-3">
+              {/* Theme Toggle */}
               <div className="flex items-center space-x-2 glass-card dark:glass-card-dark px-3 py-2 rounded-full">
                 <Sun size={16} className="text-yellow-500" />
                 <Switch
@@ -32,6 +52,17 @@ const Header: React.FC = () => {
                 />
                 <Moon size={16} className="text-slate-700 dark:text-slate-300" />
               </div>
+
+              {/* Settings Dropdown */}
+              <SettingsDropdown
+                timeFilter={timeFilter}
+                onTimeFilterChange={onTimeFilterChange}
+                currency={currency}
+                onCurrencyChange={onCurrencyChange}
+                onExport={onExport}
+                onClearAll={onClearAll}
+                expenseCount={expenseCount}
+              />
             </div>
           </div>
         </div>
