@@ -6,6 +6,7 @@ import { categoryColors } from '../utils/categories';
 import { formatCurrency } from '../utils/dateFilters';
 import { convertExpenseAmount, formatCurrencyAmount } from '../utils/currencyConverter';
 import { TrendingUp, PieChart, Calendar, BarChart3, Loader } from 'lucide-react';
+import { GlassCard } from './ui/card';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Title);
 
@@ -122,10 +123,13 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
       datasets: [{
         label: 'Daily Spending',
         data: dailySpending,
-        borderColor: 'rgb(59, 130, 246)',
+        borderColor: 'rgba(59, 130, 246, 0.8)',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         tension: 0.4,
-        fill: true
+        fill: true,
+        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+        pointBorderColor: 'rgba(255, 255, 255, 0.8)',
+        pointBorderWidth: 2,
       }]
     };
   };
@@ -138,8 +142,8 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
       data: Object.values(categoryTotals),
       backgroundColor: Object.keys(categoryTotals).map(cat => categoryColors[cat] || '#95A5A6'),
       borderWidth: 0,
-      hoverBorderWidth: 2,
-      hoverBorderColor: '#fff'
+      hoverBorderWidth: 3,
+      hoverBorderColor: 'rgba(255, 255, 255, 0.8)'
     }]
   };
   
@@ -151,6 +155,11 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
         display: false
       },
       tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: 'white',
+        bodyColor: 'white',
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+        borderWidth: 1,
         callbacks: {
           label: (context: any) => {
             const label = context.label || '';
@@ -172,6 +181,11 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
         display: false
       },
       tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: 'white',
+        bodyColor: 'white',
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+        borderWidth: 1,
         callbacks: {
           label: (context: any) => {
             return `${context.label}: ${formatCurrencyAmount(context.raw, currency)}`;
@@ -183,9 +197,10 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
       y: {
         beginAtZero: true,
         grid: {
-          color: 'rgba(0, 0, 0, 0.1)'
+          color: 'rgba(255, 255, 255, 0.1)'
         },
         ticks: {
+          color: 'rgba(255, 255, 255, 0.7)',
           callback: function(value: any) {
             return formatCurrencyAmount(value, currency);
           }
@@ -194,6 +209,9 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
       x: {
         grid: {
           display: false
+        },
+        ticks: {
+          color: 'rgba(255, 255, 255, 0.7)'
         }
       }
     }
@@ -211,93 +229,93 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
   return (
     <div className="max-w-6xl mx-auto px-4 -mt-8 relative z-20">
       {conversionError && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
-          <p className="text-sm text-yellow-700">⚠️ {conversionError}</p>
+        <div className="mb-4 p-3 glass-card dark:glass-card-dark border border-yellow-400/30">
+          <p className="text-sm text-yellow-300">⚠️ {conversionError}</p>
         </div>
       )}
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Enhanced Total Expenses Card with Average Spending */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+        <GlassCard className="p-6 hover:scale-105 transition-all duration-300 glow-blue">
           <div className="flex items-center justify-between mb-4">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-full p-3">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-full p-3 glow-blue">
               <TrendingUp size={24} className="text-white" />
             </div>
             <div className="text-right">
-              <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+              <span className="text-sm text-white/70 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
                 {getTimeFilterLabel()}
               </span>
               {isConverting && (
                 <div className="flex items-center mt-1">
-                  <Loader size={12} className="animate-spin mr-1" />
-                  <span className="text-xs text-gray-500">Converting...</span>
+                  <Loader size={12} className="animate-spin mr-1 text-white/70" />
+                  <span className="text-xs text-white/70">Converting...</span>
                 </div>
               )}
             </div>
           </div>
           
-          <h3 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-2">
+          <h3 className="text-2xl lg:text-3xl font-bold text-white mb-2">
             {formatCurrencyAmount(totalAmount, currency)}
           </h3>
-          <p className="text-gray-600 mb-4">Total Expenses</p>
+          <p className="text-white/80 mb-4">Total Expenses</p>
           
           {/* Average Spending Section */}
-          <div className="space-y-3 pt-4 border-t border-gray-200">
+          <div className="space-y-3 pt-4 border-t border-white/20">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <BarChart3 size={16} className="text-blue-500 mr-2" />
-                <span className="text-sm text-gray-600">Avg per transaction</span>
+                <BarChart3 size={16} className="text-blue-400 mr-2" />
+                <span className="text-sm text-white/70">Avg per transaction</span>
               </div>
-              <span className="text-sm font-semibold text-gray-800">
+              <span className="text-sm font-semibold text-white">
                 {formatCurrencyAmount(averageSpending, currency)}
               </span>
             </div>
             
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <Calendar size={16} className="text-green-500 mr-2" />
-                <span className="text-sm text-gray-600">
+                <Calendar size={16} className="text-green-400 mr-2" />
+                <span className="text-sm text-white/70">
                   Daily average ({timeFilter === 'today' ? 'today' : timeFilter})
                 </span>
               </div>
-              <span className="text-sm font-semibold text-gray-800">
+              <span className="text-sm font-semibold text-white">
                 {formatCurrencyAmount(dailyAverage, currency)}
               </span>
             </div>
             
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <Calendar size={16} className="text-purple-500 mr-2" />
-                <span className="text-sm text-gray-600">Total transactions</span>
+                <Calendar size={16} className="text-purple-400 mr-2" />
+                <span className="text-sm text-white/70">Total transactions</span>
               </div>
-              <span className="text-sm font-semibold text-gray-800">
+              <span className="text-sm font-semibold text-white">
                 {totalTransactions}
               </span>
             </div>
           </div>
 
           {/* Mini Trend Chart */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-t border-white/20">
             <div className="h-16">
               <Line data={trendData} options={trendOptions} />
             </div>
-            <p className="text-xs text-gray-500 mt-2 text-center">
+            <p className="text-xs text-white/60 mt-2 text-center">
               7-day spending trend
             </p>
           </div>
-        </div>
+        </GlassCard>
         
         {/* Enhanced Chart Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 lg:col-span-2">
+        <GlassCard className="p-6 hover:scale-105 transition-all duration-300 lg:col-span-2 glow-purple">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
-              <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full p-3 mr-4">
+              <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full p-3 mr-4 glow-green">
                 <PieChart size={24} className="text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-800">Spending Breakdown</h3>
+              <h3 className="text-xl font-semibold text-white">Spending Breakdown</h3>
             </div>
             {isConverting && (
-              <div className="flex items-center text-sm text-gray-500">
+              <div className="flex items-center text-sm text-white/70">
                 <Loader size={16} className="animate-spin mr-2" />
                 Converting currencies...
               </div>
@@ -312,17 +330,17 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
                   <Doughnut data={chartData} options={chartOptions} />
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-800">
+                      <div className="text-2xl font-bold text-white">
                         {totalTransactions}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-white/70">
                         Expenses
                       </div>
                     </div>
                   </div>
                 </>
               ) : (
-                <div className="h-full flex items-center justify-center text-gray-400">
+                <div className="h-full flex items-center justify-center text-white/60">
                   <div className="text-center">
                     <PieChart size={48} className="mx-auto mb-2 opacity-50" />
                     <p>No expenses to display</p>
@@ -342,18 +360,18 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
                     <div key={category} className="flex items-center justify-between">
                       <div className="flex items-center">
                         <div 
-                          className="w-3 h-3 rounded-full mr-3"
+                          className="w-3 h-3 rounded-full mr-3 shadow-lg"
                           style={{ backgroundColor: categoryColors[category] || '#95A5A6' }}
                         ></div>
-                        <span className="text-sm text-gray-700 truncate max-w-24">
+                        <span className="text-sm text-white/80 truncate max-w-24">
                           {category}
                         </span>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-semibold text-gray-800">
+                        <div className="text-sm font-semibold text-white">
                           {formatCurrencyAmount(amount, currency)}
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-white/60">
                           {percentage}%
                         </div>
                       </div>
@@ -363,9 +381,9 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
               
               {/* Currency Conversion Info */}
               {convertedExpenses.length > 0 && !isConverting && (
-                <div className="pt-3 border-t border-gray-200">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-xs text-blue-700">
+                <div className="pt-3 border-t border-white/20">
+                  <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg p-3 backdrop-blur-sm">
+                    <p className="text-xs text-blue-200">
                       💱 Amounts converted to {currency} using real-time exchange rates
                     </p>
                   </div>
@@ -373,7 +391,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
               )}
             </div>
           </div>
-        </div>
+        </GlassCard>
       </div>
     </div>
   );
