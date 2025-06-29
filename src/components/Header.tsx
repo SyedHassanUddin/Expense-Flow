@@ -1,9 +1,11 @@
 import React from 'react';
-import { TrendingUp, Moon, Sun } from 'lucide-react';
+import { TrendingUp, Moon, Sun, LogOut, User } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from './auth/AuthProvider';
 import { Switch } from './ui/switch';
 import SettingsDropdown from './SettingsDropdown';
 import { Currency, TimeFilter } from '../types/expense';
+import toast from 'react-hot-toast';
 
 interface HeaderProps {
   timeFilter: TimeFilter;
@@ -13,6 +15,8 @@ interface HeaderProps {
   onExport: () => void;
   onClearAll: () => void;
   expenseCount: number;
+  user: any;
+  onAuthRequired: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -22,9 +26,21 @@ const Header: React.FC<HeaderProps> = ({
   onCurrencyChange,
   onExport,
   onClearAll,
-  expenseCount
+  expenseCount,
+  user,
+  onAuthRequired
 }) => {
   const { theme, toggleTheme } = useTheme();
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success('Signed out successfully! 👋');
+    } catch (error) {
+      toast.error('Failed to sign out');
+    }
+  };
 
   return (
     <header className="relative z-50">
@@ -42,6 +58,32 @@ const Header: React.FC<HeaderProps> = ({
 
             {/* Right Side Controls */}
             <div className="flex items-center space-x-3">
+              {/* User Info */}
+              {user ? (
+                <div className="flex items-center space-x-2 glass-card dark:glass-card-dark px-3 py-2 rounded-full">
+                  <div className="bg-green-500 rounded-full p-1">
+                    <User size={14} className="text-white" />
+                  </div>
+                  <span className="text-sm text-white/80 hidden sm:block">
+                    {user.email?.split('@')[0]}
+                  </span>
+                  <button
+                    onClick={handleSignOut}
+                    className="p-1 hover:bg-white/10 rounded-full transition-colors"
+                    title="Sign out"
+                  >
+                    <LogOut size={14} className="text-white/70" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={onAuthRequired}
+                  className="glass-card dark:glass-card-dark px-4 py-2 rounded-full text-sm text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  Sign In
+                </button>
+              )}
+
               {/* Theme Toggle */}
               <div className="flex items-center space-x-2 glass-card dark:glass-card-dark px-3 py-2 rounded-full">
                 <Sun size={16} className="text-yellow-500" />
