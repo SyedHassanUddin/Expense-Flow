@@ -9,16 +9,16 @@ interface EmptyStateProps {
 const EmptyState: React.FC<EmptyStateProps> = ({ onAddExpense, searchTerm }) => {
   if (searchTerm) {
     return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-12 text-center">
-        <div className="text-gray-400 mb-4">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-            <Coffee size={32} className="text-gray-400" />
+      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-12 text-center">
+        <div className="text-white/40 mb-4">
+          <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center border border-white/20">
+            <Coffee size={32} className="text-white/40" />
           </div>
         </div>
-        <h3 className="text-xl font-semibold text-gray-600 mb-2">
+        <h3 className="text-xl font-semibold text-white/80 mb-2">
           No expenses found for "{searchTerm}"
         </h3>
-        <p className="text-gray-500 mb-6">
+        <p className="text-white/60 mb-6">
           Try adjusting your search term or add a new expense
         </p>
         <button
@@ -32,29 +32,29 @@ const EmptyState: React.FC<EmptyStateProps> = ({ onAddExpense, searchTerm }) => 
   }
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-12 text-center">
+    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-12 text-center">
       {/* Animated Icons */}
       <div className="flex justify-center space-x-4 mb-6">
         <div className="animate-bounce" style={{ animationDelay: '0ms' }}>
-          <Pizza size={32} className="text-orange-500" />
+          <Pizza size={32} className="text-orange-400" />
         </div>
         <div className="animate-bounce" style={{ animationDelay: '150ms' }}>
-          <Coffee size={32} className="text-amber-600" />
+          <Coffee size={32} className="text-amber-400" />
         </div>
         <div className="animate-bounce" style={{ animationDelay: '300ms' }}>
-          <Car size={32} className="text-blue-500" />
+          <Car size={32} className="text-blue-400" />
         </div>
       </div>
       
-      <h3 className="text-2xl font-bold text-gray-700 mb-3">
+      <h3 className="text-2xl font-bold text-white/90 mb-3">
         No expenses yet! 
       </h3>
       
-      <p className="text-lg text-gray-600 mb-2">
-        Click <span className="font-semibold text-blue-600">+</span> to add your first 🍕 coffee ☕ or ride 🚕
+      <p className="text-lg text-white/70 mb-2">
+        Click <span className="font-semibold text-blue-300">+</span> to add your first 🍕 coffee ☕ or ride 🚕
       </p>
       
-      <p className="text-sm text-gray-500 mb-8 italic">
+      <p className="text-sm text-white/50 mb-8 italic">
         "Tracking today helps you save tomorrow."
       </p>
       
@@ -68,14 +68,14 @@ const EmptyState: React.FC<EmptyStateProps> = ({ onAddExpense, searchTerm }) => 
       
       {/* Sample Chart Preview */}
       <div className="mt-12 opacity-30">
-        <div className="w-32 h-32 mx-auto border-8 border-gray-200 rounded-full relative">
-          <div className="absolute inset-2 border-4 border-blue-200 rounded-full"></div>
-          <div className="absolute inset-4 border-2 border-green-200 rounded-full"></div>
+        <div className="w-32 h-32 mx-auto border-8 border-white/20 rounded-full relative">
+          <div className="absolute inset-2 border-4 border-blue-300/30 rounded-full"></div>
+          <div className="absolute inset-4 border-2 border-green-300/30 rounded-full"></div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-xs text-gray-400 font-medium">Sample Chart</span>
+            <span className="text-xs text-white/40 font-medium">Sample Chart</span>
           </div>
         </div>
-        <p className="text-xs text-gray-400 mt-2">Your spending breakdown will appear here</p>
+        <p className="text-xs text-white/40 mt-2">Your spending breakdown will appear here</p>
       </div>
     </div>
   );

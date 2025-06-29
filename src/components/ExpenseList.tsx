@@ -46,15 +46,16 @@ const ExpenseList: React.FC<ExpenseListProps> = ({
       {sortedExpenses.length === 0 ? (
         <EmptyState onAddExpense={onAddExpense} searchTerm={searchTerm} />
       ) : (
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 lg:p-8">
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl p-6 lg:p-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Recent Expenses</h2>
-            <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+            <h2 className="text-2xl font-bold text-white">Recent Expenses</h2>
+            <span className="text-sm text-white/60 bg-white/10 px-3 py-1 rounded-full border border-white/20">
               {sortedExpenses.length} {sortedExpenses.length === 1 ? 'expense' : 'expenses'}
             </span>
           </div>
           
-          <div className="space-y-3">
+          {/* Scrollable container for expenses */}
+          <div className="max-h-96 overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
             {sortedExpenses.map((expense) => (
               <ExpenseItem
                 key={expense.id}

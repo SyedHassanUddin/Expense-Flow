@@ -60,7 +60,11 @@ function extractAmount(text: string): number | undefined {
     
     // Common phrases
     /(?:it\s+)?(?:was|is|costs?)\s+(\d+(?:\.\d{1,2})?)\s*(?:rupees?|dollars?|euros?|pounds?|rs|usd|eur|gbp|bucks?)\b/gi,
-    /(?:around|about|approximately)\s+(\d+(?:\.\d{1,2})?)\s*(?:rupees?|dollars?|euros?|pounds?|rs|usd|eur|gbp|bucks?)\b/gi
+    /(?:around|about|approximately)\s+(\d+(?:\.\d{1,2})?)\s*(?:rupees?|dollars?|euros?|pounds?|rs|usd|eur|gbp|bucks?)\b/gi,
+    
+    // Numbers in expense context
+    /(?:expense|buy|bought|purchase|purchased)\s+(?:for|of)?\s*(\d+(?:\.\d{1,2})?)\b/gi,
+    /(\d+(?:\.\d{1,2})?)\s*(?:rupee|dollar|euro|pound)\b/gi
   ];
 
   for (const pattern of amountPatterns) {
@@ -104,8 +108,9 @@ function extractQuantity(text: string): number | undefined {
     /(?:quantity|pieces?|items?|nos?|pcs?|units?|counts?)\s+(?:of|is|was)?\s*(\d+)\b/gi,
     /(\d+)\s*(?:of|x|×)\s*(?:them|these|those|items?)\b/gi,
     /(?:bought|got|ordered|purchased|had)\s+(\d+)\s*(?:of|pieces?|items?)?\b/gi,
-    /(\d+)\s*(?:cups?|bottles?|plates?|bowls?|glasses?)\b/gi,
-    /(?:for|with)\s+(\d+)\s+(?:people|persons?|friends?)\b/gi
+    /(\d+)\s*(?:cups?|bottles?|plates?|bowls?|glasses?|packets?|boxes?)\b/gi,
+    /(?:for|with)\s+(\d+)\s+(?:people|persons?|friends?)\b/gi,
+    /(\d+)\s*(?:servings?|portions?)\b/gi
   ];
 
   for (const pattern of quantityPatterns) {
@@ -140,7 +145,7 @@ function extractDescription(text: string): string | undefined {
     .replace(/\b\d{1,2}-\d{1,2}-\d{2,4}\b/gi, '')
     
     // Remove action words and prepositions more selectively
-    .replace(/\b(?:bought|paid|spend|spent|for|of|on|with|from|to|in|at|the|a|an|and|bill|visit|got|purchased|ordered|cost|costs|worth|price|amount|total|was|is|it)\b/gi, ' ')
+    .replace(/\b(?:bought|paid|spend|spent|for|of|on|with|from|to|in|at|the|a|an|and|bill|visit|got|purchased|ordered|cost|costs|worth|price|amount|total|was|is|it|expense|buy)\b/gi, ' ')
     
     // Remove standalone numbers but preserve words with numbers
     .replace(/\b\d+(?:\.\d+)?\b/g, ' ')
@@ -177,6 +182,7 @@ function extractDescription(text: string): string | undefined {
         'dinner': 'Dinner',
         'breakfast': 'Breakfast',
         'snack': 'Snacks',
+        'snacks': 'Snacks',
         'uber': 'Uber Ride',
         'ola': 'Ola Ride',
         'taxi': 'Taxi Ride',
@@ -187,6 +193,7 @@ function extractDescription(text: string): string | undefined {
         'gas': 'Gas/Fuel',
         'petrol': 'Petrol',
         'diesel': 'Diesel',
+        'fuel': 'Fuel',
         'groceries': 'Groceries',
         'grocery': 'Groceries',
         'shopping': 'Shopping',
@@ -205,7 +212,12 @@ function extractDescription(text: string): string | undefined {
         'recharge': 'Mobile Recharge',
         'book': 'Books',
         'books': 'Books',
-        'stationery': 'Stationery'
+        'stationery': 'Stationery',
+        'food': 'Food',
+        'drink': 'Drinks',
+        'water': 'Water',
+        'juice': 'Juice',
+        'milk': 'Milk'
       };
 
       // Check if description matches common expense types
@@ -385,7 +397,8 @@ export function startVoiceRecognition(
   onResult: (result: VoiceResult) => void,
   onError: (error: string) => void,
   onStart: () => void,
-  onEnd: () => void
+  onEnd: () => void,
+  onTranscript?: (transcript: string) => void
 ): () => void {
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
     onError('Speech recognition not supported in this browser. Please use Chrome, Edge, or Safari.');
@@ -397,7 +410,7 @@ export function startVoiceRecognition(
   
   // Enhanced recognition settings
   recognition.continuous = false;
-  recognition.interimResults = false;
+  recognition.interimResults = true; // Enable interim results for real-time display
   recognition.lang = 'en-US';
   recognition.maxAlternatives = 5; // Get more alternatives for better parsing
   
@@ -409,42 +422,63 @@ export function startVoiceRecognition(
   recognition.onresult = (event: any) => {
     console.log('Voice recognition results received:', event.results);
     
-    // Try multiple alternatives for better accuracy
-    let bestResult: VoiceResult = {};
-    let bestScore = 0;
-    let allTranscripts: string[] = [];
+    // Handle interim results for real-time display
+    let interimTranscript = '';
+    let finalTranscript = '';
     
-    for (let i = 0; i < event.results[0].length; i++) {
-      const transcript = event.results[0][i].transcript.trim();
-      const confidence = event.results[0][i].confidence || 0.5;
-      
-      allTranscripts.push(transcript);
-      console.log(`Alternative ${i + 1}: "${transcript}" (confidence: ${confidence})`);
-      
-      const result = parseVoiceInput(transcript);
-      const score = calculateResultScore(result) * confidence;
-      
-      if (score > bestScore) {
-        bestScore = score;
-        bestResult = result;
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const transcript = event.results[i][0].transcript;
+      if (event.results[i].isFinal) {
+        finalTranscript += transcript;
+      } else {
+        interimTranscript += transcript;
       }
     }
     
-    // If no good result found, try combining information from all alternatives
-    if (bestScore < 2) {
-      console.log('Low confidence results, trying to combine alternatives...');
-      bestResult = combineAlternatives(allTranscripts);
+    // Update real-time transcript display
+    if (onTranscript) {
+      onTranscript(finalTranscript || interimTranscript);
     }
     
-    console.log('Best voice result:', bestResult);
-    
-    // Validate result before returning
-    if (!bestResult.amount && !bestResult.description) {
-      onError('Could not understand the expense details. Please try speaking more clearly. Example: "Coffee 50 rupees today"');
-      return;
+    // Process final results
+    if (finalTranscript) {
+      // Try multiple alternatives for better accuracy
+      let bestResult: VoiceResult = {};
+      let bestScore = 0;
+      let allTranscripts: string[] = [];
+      
+      for (let i = 0; i < event.results[event.results.length - 1].length; i++) {
+        const transcript = event.results[event.results.length - 1][i].transcript.trim();
+        const confidence = event.results[event.results.length - 1][i].confidence || 0.5;
+        
+        allTranscripts.push(transcript);
+        console.log(`Alternative ${i + 1}: "${transcript}" (confidence: ${confidence})`);
+        
+        const result = parseVoiceInput(transcript);
+        const score = calculateResultScore(result) * confidence;
+        
+        if (score > bestScore) {
+          bestScore = score;
+          bestResult = result;
+        }
+      }
+      
+      // If no good result found, try combining information from all alternatives
+      if (bestScore < 2) {
+        console.log('Low confidence results, trying to combine alternatives...');
+        bestResult = combineAlternatives(allTranscripts);
+      }
+      
+      console.log('Best voice result:', bestResult);
+      
+      // Validate result before returning
+      if (!bestResult.amount && !bestResult.description) {
+        onError('Could not understand the expense details. Please try speaking more clearly. Example: "Coffee 50 rupees today"');
+        return;
+      }
+      
+      onResult(bestResult);
     }
-    
-    onResult(bestResult);
   };
   
   recognition.onerror = (event: any) => {

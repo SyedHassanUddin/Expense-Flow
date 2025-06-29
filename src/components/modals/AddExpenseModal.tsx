@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Plus, Mic, Camera, Loader, Upload, AlertTriangle } from 'lucide-react';
+import { X, Plus, Mic, Camera, Loader, Upload, AlertTriangle, Volume2 } from 'lucide-react';
 import { ExpenseFormData, Currency } from '../../types/expense';
 import { startVoiceRecognition, VoiceResult } from '../../utils/voiceRecognition';
 import { processReceiptImage, ReceiptData } from '../../utils/receiptOCR';
@@ -32,6 +32,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const [isProcessingReceipt, setIsProcessingReceipt] = useState(false);
   const [voiceError, setVoiceError] = useState<string>('');
   const [ocrError, setOcrError] = useState<string>('');
+  const [currentTranscript, setCurrentTranscript] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -46,6 +47,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       });
       setVoiceError('');
       setOcrError('');
+      setCurrentTranscript('');
     }
   }, [isOpen, initialData]);
 
@@ -99,6 +101,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     if (isListening) return;
     
     setVoiceError('');
+    setCurrentTranscript('');
     
     startVoiceRecognition(
       (result: VoiceResult) => {
@@ -118,14 +121,26 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
           ...(result.date && { date: result.date })
         }));
         
+        setCurrentTranscript('');
         toast.success('Voice input captured! 🎤');
       },
       (error: string) => {
         setVoiceError(error);
+        setCurrentTranscript('');
         toast.error(error);
       },
-      () => setIsListening(true),
-      () => setIsListening(false)
+      () => {
+        setIsListening(true);
+        setCurrentTranscript('Listening...');
+      },
+      () => {
+        setIsListening(false);
+        setCurrentTranscript('');
+      },
+      (transcript: string) => {
+        // Real-time transcript update
+        setCurrentTranscript(transcript);
+      }
     );
   };
 
@@ -251,7 +266,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 min="0"
                 value={formData.amount}
                 onChange={(e) => handleInputChange('amount', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white/80"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 placeholder-gray-500"
                 placeholder="0.00"
                 required
               />
@@ -266,7 +281,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 min="1"
                 value={formData.quantity}
                 onChange={(e) => handleInputChange('quantity', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white/80"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 placeholder-gray-500"
                 placeholder="1"
                 required
               />
@@ -282,7 +297,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
               type="text"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white/80"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 placeholder-gray-500"
               placeholder="What did you spend on?"
               required
             />
@@ -297,10 +312,37 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
               type="date"
               value={formData.date}
               onChange={(e) => handleInputChange('date', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white/80"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900"
               required
             />
           </div>
+
+          {/* Voice Recognition Display */}
+          {(isListening || currentTranscript) && (
+            <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+              <div className="flex items-center mb-2">
+                <Volume2 size={16} className="text-purple-600 mr-2" />
+                <h4 className="text-sm font-semibold text-purple-800">
+                  {isListening ? 'Listening...' : 'Processing...'}
+                </h4>
+              </div>
+              <div className="bg-white rounded-lg p-3 border border-purple-200">
+                <p className="text-sm text-gray-800 min-h-[20px]">
+                  {currentTranscript || 'Speak now... Example: "Coffee 50 rupees today"'}
+                </p>
+              </div>
+              {isListening && (
+                <div className="flex items-center mt-2">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                  </div>
+                  <span className="text-xs text-purple-600 ml-2">Recording audio...</span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Input Methods Row */}
           <div>
