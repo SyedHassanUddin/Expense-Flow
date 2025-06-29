@@ -1,3 +1,5 @@
+import { Expense } from '../types/expense';
+
 export interface VoiceResult {
   amount?: number;
   quantity?: number;
@@ -92,8 +94,8 @@ function extractQuantity(text: string): number | undefined {
   ];
 
   for (const pattern of quantityPatterns) {
-    const match = text.match(pattern);
-    if (match) {
+    const matches = Array.from(text.matchAll(pattern));
+    for (const match of matches) {
       const qty = parseInt(match[1]);
       if (!isNaN(qty) && qty > 0 && qty <= 100) { // Reasonable quantity range
         return qty;
@@ -327,6 +329,7 @@ export function startVoiceRecognition(
   onStart: () => void,
   onEnd: () => void
 ): () => void {
+  // Check for browser support
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
     onError('Speech recognition not supported in this browser. Please use Chrome, Edge, or Safari.');
     return () => {};
@@ -347,13 +350,15 @@ export function startVoiceRecognition(
   };
   
   recognition.onresult = (event: any) => {
+    console.log('Voice recognition result event:', event);
+    
     // Try multiple alternatives for better accuracy
     let bestResult: VoiceResult = {};
     let bestScore = 0;
     
     for (let i = 0; i < event.results[0].length; i++) {
       const transcript = event.results[0][i].transcript;
-      const confidence = event.results[0][i].confidence;
+      const confidence = event.results[0][i].confidence || 1; // Default confidence if not provided
       
       console.log(`Alternative ${i + 1}: "${transcript}" (confidence: ${confidence})`);
       
@@ -402,6 +407,7 @@ export function startVoiceRecognition(
   
   try {
     recognition.start();
+    console.log('Starting voice recognition...');
   } catch (error) {
     console.error('Failed to start voice recognition:', error);
     onError('Failed to start speech recognition. Please try again.');

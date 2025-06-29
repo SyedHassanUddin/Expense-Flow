@@ -32,6 +32,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const [isProcessingReceipt, setIsProcessingReceipt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const stopRecognitionRef = useRef<(() => void) | null>(null);
 
   // Reset form when modal opens/closes or initialData changes
   useEffect(() => {
@@ -56,6 +57,15 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
+
+  // Cleanup voice recognition on unmount
+  useEffect(() => {
+    return () => {
+      if (stopRecognitionRef.current) {
+        stopRecognitionRef.current();
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,10 +102,20 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   };
 
   const handleVoiceInput = () => {
-    if (isListening) return;
+    if (isListening) {
+      // Stop current recognition
+      if (stopRecognitionRef.current) {
+        stopRecognitionRef.current();
+      }
+      return;
+    }
     
-    startVoiceRecognition(
+    console.log('Starting voice recognition...');
+    
+    const stopRecognition = startVoiceRecognition(
       (result: VoiceResult) => {
+        console.log('Voice recognition result:', result);
+        
         setFormData(prev => ({
           ...prev,
           ...(result.amount && { amount: result.amount.toString() }),
@@ -105,13 +125,28 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         }));
         
         toast.success('Voice input captured! 🎤');
+        setIsListening(false);
+        stopRecognitionRef.current = null;
       },
       (error: string) => {
+        console.error('Voice recognition error:', error);
         toast.error(error);
+        setIsListening(false);
+        stopRecognitionRef.current = null;
       },
-      () => setIsListening(true),
-      () => setIsListening(false)
+      () => {
+        console.log('Voice recognition started');
+        setIsListening(true);
+        toast.success('Listening... Speak now!', { duration: 2000 });
+      },
+      () => {
+        console.log('Voice recognition ended');
+        setIsListening(false);
+        stopRecognitionRef.current = null;
+      }
     );
+    
+    stopRecognitionRef.current = stopRecognition;
   };
 
   const handleReceiptScan = async (file: File) => {
@@ -291,7 +326,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
               <button
                 type="button"
                 onClick={handleVoiceInput}
-                disabled={isListening || isProcessingReceipt}
+                disabled={isProcessingReceipt}
                 className={`p-4 rounded-2xl font-bold transition-all duration-300 border-2 ${
                   isListening
                     ? 'bg-red-500 text-white animate-pulse border-red-600'
