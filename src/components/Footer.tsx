@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, TrendingUp, Github, Twitter, Mail, Shield, Database, Smartphone } from 'lucide-react';
+import { TrendingUp, Github, Twitter, Mail, Shield, Database, Smartphone } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
@@ -111,18 +111,18 @@ const Footer: React.FC = () => {
         
         {/* Bottom Section */}
         <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-white/20">
-          <div className="flex items-center text-white/70 mb-4 md:mb-0">
-            <span>Made with</span>
-            <Heart size={16} className="mx-2 text-red-400" />
-            <span>for better financial tracking</span>
-          </div>
-          
-          <div className="text-center md:text-right">
+          <div className="text-center md:text-left mb-4 md:mb-0">
             <p className="text-sm text-white/50 mb-1">
               © 2024 ExpenseFlow. All rights reserved.
             </p>
             <p className="text-xs text-white/40">
               Open source • Privacy focused • User friendly
+            </p>
+          </div>
+          
+          <div className="text-center md:text-right">
+            <p className="text-sm text-white/70">
+              Smart expense tracking for everyone
             </p>
           </div>
         </div>

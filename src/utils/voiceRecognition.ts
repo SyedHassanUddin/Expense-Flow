@@ -44,18 +44,23 @@ export function parseVoiceInput(transcript: string): VoiceResult {
 }
 
 function extractAmount(text: string): number | undefined {
-  // Enhanced patterns for amount extraction
+  // Enhanced patterns for amount extraction with better word boundaries
   const amountPatterns = [
-    // Direct currency mentions with amounts
-    /(?:for|of|paid|cost|costs|worth|price|amount|total|bill)\s*(?:of|is|was)?\s*(\d+(?:\.\d+)?)\s*(?:rupees?|dollars?|euros?|pounds?|rs|usd|eur|gbp|bucks?)/gi,
-    /(\d+(?:\.\d+)?)\s*(?:rupees?|dollars?|euros?|pounds?|rs|usd|eur|gbp|bucks?)/gi,
-    // Currency symbols
-    /(?:\$|₹|€|£)\s*(\d+(?:\.\d+)?)/gi,
-    /(\d+(?:\.\d+)?)\s*(?:\$|₹|€|£)/gi,
-    // Standalone numbers in context
-    /(?:spent|paid|cost|costs|bill|price|amount|total|worth)\s*(?:of|is|was)?\s*(\d+(?:\.\d+)?)/gi,
-    // Numbers followed by context words
-    /(\d+(?:\.\d+)?)\s*(?:only|each|per|total|altogether)/gi
+    // Direct currency mentions with amounts - more specific patterns
+    /(?:for|of|paid|cost|costs|worth|price|amount|total|bill|spent)\s+(?:of|is|was|about|around)?\s*(\d+(?:\.\d{1,2})?)\s*(?:rupees?|dollars?|euros?|pounds?|rs|usd|eur|gbp|bucks?)\b/gi,
+    /(\d+(?:\.\d{1,2})?)\s*(?:rupees?|dollars?|euros?|pounds?|rs|usd|eur|gbp|bucks?)\b/gi,
+    
+    // Currency symbols with better positioning
+    /(?:\$|₹|€|£)\s*(\d+(?:\.\d{1,2})?)\b/gi,
+    /(\d+(?:\.\d{1,2})?)\s*(?:\$|₹|€|£)\b/gi,
+    
+    // Contextual amount extraction
+    /(?:spent|paid|cost|costs|bill|price|amount|total|worth)\s+(?:of|is|was|about|around)?\s*(\d+(?:\.\d{1,2})?)\b/gi,
+    /(\d+(?:\.\d{1,2})?)\s*(?:only|each|per|total|altogether|exactly)\b/gi,
+    
+    // Common phrases
+    /(?:it\s+)?(?:was|is|costs?)\s+(\d+(?:\.\d{1,2})?)\s*(?:rupees?|dollars?|euros?|pounds?|rs|usd|eur|gbp|bucks?)\b/gi,
+    /(?:around|about|approximately)\s+(\d+(?:\.\d{1,2})?)\s*(?:rupees?|dollars?|euros?|pounds?|rs|usd|eur|gbp|bucks?)\b/gi
   ];
 
   for (const pattern of amountPatterns) {
@@ -68,14 +73,24 @@ function extractAmount(text: string): number | undefined {
     }
   }
 
-  // Fallback: look for any reasonable number
-  const numberPattern = /\b(\d+(?:\.\d+)?)\b/g;
-  const numbers = Array.from(text.matchAll(numberPattern))
+  // Enhanced fallback: look for reasonable numbers in context
+  const contextualNumberPattern = /\b(\d+(?:\.\d{1,2})?)\b/g;
+  const numbers = Array.from(text.matchAll(contextualNumberPattern))
     .map(match => parseFloat(match[1]))
-    .filter(num => num > 0 && num < 100000); // Reasonable expense range
+    .filter(num => num > 0 && num < 100000) // Reasonable expense range
+    .filter(num => {
+      // Filter out years, times, and other non-monetary numbers
+      return !(num >= 1900 && num <= 2030) && // Not a year
+             !(num >= 100 && num <= 2400 && num % 100 === 0) && // Not likely a time
+             num !== 1; // Not just "1" without context
+    });
 
   if (numbers.length > 0) {
-    // Return the first reasonable number found
+    // Return the most reasonable number (prefer numbers with decimals for currency)
+    const decimalNumbers = numbers.filter(num => num % 1 !== 0);
+    if (decimalNumbers.length > 0) {
+      return decimalNumbers[0];
+    }
     return numbers[0];
   }
 
@@ -83,19 +98,21 @@ function extractAmount(text: string): number | undefined {
 }
 
 function extractQuantity(text: string): number | undefined {
-  // Enhanced quantity patterns
+  // Enhanced quantity patterns with better word boundaries
   const quantityPatterns = [
-    /(\d+)\s*(?:quantity|quantities|pieces?|items?|nos?|pcs?|units?|counts?|times?)/gi,
-    /(?:quantity|pieces?|items?|nos?|pcs?|units?|counts?)\s*(?:of|is|was)?\s*(\d+)/gi,
-    /(\d+)\s*(?:of|x|×)\s*(?:them|these|those|items?)/gi,
-    /(?:bought|got|ordered|purchased)\s*(\d+)\s*(?:of|pieces?|items?)?/gi
+    /(\d+)\s*(?:quantity|quantities|pieces?|items?|nos?|pcs?|units?|counts?|times?)\b/gi,
+    /(?:quantity|pieces?|items?|nos?|pcs?|units?|counts?)\s+(?:of|is|was)?\s*(\d+)\b/gi,
+    /(\d+)\s*(?:of|x|×)\s*(?:them|these|those|items?)\b/gi,
+    /(?:bought|got|ordered|purchased|had)\s+(\d+)\s*(?:of|pieces?|items?)?\b/gi,
+    /(\d+)\s*(?:cups?|bottles?|plates?|bowls?|glasses?)\b/gi,
+    /(?:for|with)\s+(\d+)\s+(?:people|persons?|friends?)\b/gi
   ];
 
   for (const pattern of quantityPatterns) {
-    const match = text.match(pattern);
-    if (match) {
+    const matches = Array.from(text.matchAll(pattern));
+    for (const match of matches) {
       const qty = parseInt(match[1]);
-      if (!isNaN(qty) && qty > 0 && qty <= 100) { // Reasonable quantity range
+      if (!isNaN(qty) && qty > 1 && qty <= 100) { // Reasonable quantity range, must be > 1
         return qty;
       }
     }
@@ -106,21 +123,28 @@ function extractQuantity(text: string): number | undefined {
 
 function extractDescription(text: string): string | undefined {
   let description = text
-    // Remove currency and amount expressions
-    .replace(/(\d+(?:\.\d+)?)\s*(?:rupees?|dollars?|euros?|pounds?|rs|usd|eur|gbp|bucks?|\$|₹|€|£)/gi, '')
+    // Remove currency and amount expressions more precisely
+    .replace(/(\d+(?:\.\d{1,2})?)\s*(?:rupees?|dollars?|euros?|pounds?|rs|usd|eur|gbp|bucks?|\$|₹|€|£)\b/gi, '')
+    .replace(/(?:\$|₹|€|£)\s*(\d+(?:\.\d{1,2})?)\b/gi, '')
+    
     // Remove quantity expressions
-    .replace(/(\d+)\s*(?:quantity|quantities|pieces?|items?|nos?|pcs?|units?|counts?|times?)/gi, '')
+    .replace(/(\d+)\s*(?:quantity|quantities|pieces?|items?|nos?|pcs?|units?|counts?|times?)\b/gi, '')
+    .replace(/(?:quantity|pieces?|items?|nos?|pcs?|units?|counts?)\s+(?:of|is|was)?\s*(\d+)\b/gi, '')
+    
     // Remove date expressions
     .replace(/\b(?:today|yesterday|tomorrow)\b/gi, '')
     .replace(/\b(?:on\s+)?(?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2}(?:st|nd|rd|th)?\b/gi, '')
     .replace(/\b(?:on\s+)?(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/gi, '')
-    .replace(/\b(?:last|next)\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|week|month)\b/gi, '')
+    .replace(/\b(?:last|next|this)\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|week|month)\b/gi, '')
     .replace(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/gi, '')
     .replace(/\b\d{1,2}-\d{1,2}-\d{2,4}\b/gi, '')
-    // Remove action words and prepositions
-    .replace(/\b(?:bought|paid|spend|spent|for|of|on|with|from|to|in|at|the|a|an|and|bill|visit|got|purchased|ordered|cost|costs|worth|price|amount|total)\b/gi, '')
-    // Remove standalone numbers
-    .replace(/\b\d+(?:\.\d+)?\b/g, '')
+    
+    // Remove action words and prepositions more selectively
+    .replace(/\b(?:bought|paid|spend|spent|for|of|on|with|from|to|in|at|the|a|an|and|bill|visit|got|purchased|ordered|cost|costs|worth|price|amount|total|was|is|it)\b/gi, ' ')
+    
+    // Remove standalone numbers but preserve words with numbers
+    .replace(/\b\d+(?:\.\d+)?\b/g, ' ')
+    
     // Clean up extra spaces
     .replace(/\s+/g, ' ')
     .trim();
@@ -132,7 +156,8 @@ function extractDescription(text: string): string | undefined {
       .split(' ')
       .filter(word => word.length > 1) // Remove single characters
       .filter(word => !/^\d+$/.test(word)) // Remove pure numbers
-      .filter(word => word.length < 20); // Remove very long words (likely errors)
+      .filter(word => word.length < 25) // Remove very long words (likely errors)
+      .filter(word => /[a-zA-Z]/.test(word)); // Must contain at least one letter
 
     if (words.length > 0) {
       // Capitalize first letter of each word for better presentation
@@ -140,29 +165,47 @@ function extractDescription(text: string): string | undefined {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
 
-      // Common expense type mappings for better categorization
+      // Enhanced expense type mappings for better categorization
       const expenseMap: Record<string, string> = {
         'coffee': 'Coffee',
         'tea': 'Tea',
+        'chai': 'Chai',
         'pizza': 'Pizza',
         'burger': 'Burger',
+        'sandwich': 'Sandwich',
         'lunch': 'Lunch',
         'dinner': 'Dinner',
         'breakfast': 'Breakfast',
+        'snack': 'Snacks',
         'uber': 'Uber Ride',
+        'ola': 'Ola Ride',
         'taxi': 'Taxi Ride',
+        'auto': 'Auto Rickshaw',
         'bus': 'Bus Fare',
         'metro': 'Metro Ticket',
+        'train': 'Train Ticket',
         'gas': 'Gas/Fuel',
         'petrol': 'Petrol',
+        'diesel': 'Diesel',
         'groceries': 'Groceries',
+        'grocery': 'Groceries',
         'shopping': 'Shopping',
+        'clothes': 'Clothes',
+        'shirt': 'Shirt',
+        'shoes': 'Shoes',
         'movie': 'Movie Tickets',
+        'cinema': 'Cinema Tickets',
         'doctor': 'Doctor Visit',
         'medicine': 'Medicine',
+        'pharmacy': 'Pharmacy',
         'electricity': 'Electricity Bill',
         'internet': 'Internet Bill',
-        'phone': 'Phone Bill'
+        'phone': 'Phone Bill',
+        'mobile': 'Mobile Recharge',
+        'recharge': 'Mobile Recharge',
+        'book': 'Books',
+        'books': 'Books',
+        'stationery': 'Stationery'
       };
 
       // Check if description matches common expense types
@@ -171,6 +214,11 @@ function extractDescription(text: string): string | undefined {
         if (lowerDesc.includes(key)) {
           return value;
         }
+      }
+
+      // If description is too short or generic, try to enhance it
+      if (description.length < 3) {
+        return undefined;
       }
 
       return description;
@@ -208,14 +256,23 @@ function extractDate(transcript: string): string | null {
     'july', 'august', 'september', 'october', 'november', 'december'
   ];
   
+  const monthShortNames = [
+    'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+    'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
+  ];
+  
   // Handle specific dates like "June 25th", "June 25", "25th June"
-  const monthRegex = new RegExp(`\\b(?:on\\s+)?(${monthNames.join('|')})\\s+(\\d{1,2})(?:st|nd|rd|th)?\\b`, 'i');
+  const allMonthNames = [...monthNames, ...monthShortNames];
+  const monthRegex = new RegExp(`\\b(?:on\\s+)?(${allMonthNames.join('|')})\\s+(\\d{1,2})(?:st|nd|rd|th)?\\b`, 'i');
   const monthMatch = transcript.match(monthRegex);
   
   if (monthMatch) {
     const monthName = monthMatch[1].toLowerCase();
     const day = parseInt(monthMatch[2]);
-    const monthIndex = monthNames.indexOf(monthName);
+    let monthIndex = monthNames.indexOf(monthName);
+    if (monthIndex === -1) {
+      monthIndex = monthShortNames.indexOf(monthName);
+    }
     
     if (monthIndex !== -1 && day >= 1 && day <= 31) {
       const date = new Date(today.getFullYear(), monthIndex, day);
@@ -228,13 +285,16 @@ function extractDate(transcript: string): string | null {
   }
   
   // Handle reverse format "25th June", "25 June"
-  const reverseDateRegex = new RegExp(`\\b(?:on\\s+)?(\\d{1,2})(?:st|nd|rd|th)?\\s+(${monthNames.join('|')})\\b`, 'i');
+  const reverseDateRegex = new RegExp(`\\b(?:on\\s+)?(\\d{1,2})(?:st|nd|rd|th)?\\s+(${allMonthNames.join('|')})\\b`, 'i');
   const reverseDateMatch = transcript.match(reverseDateRegex);
   
   if (reverseDateMatch) {
     const day = parseInt(reverseDateMatch[1]);
     const monthName = reverseDateMatch[2].toLowerCase();
-    const monthIndex = monthNames.indexOf(monthName);
+    let monthIndex = monthNames.indexOf(monthName);
+    if (monthIndex === -1) {
+      monthIndex = monthShortNames.indexOf(monthName);
+    }
     
     if (monthIndex !== -1 && day >= 1 && day <= 31) {
       const date = new Date(today.getFullYear(), monthIndex, day);
@@ -339,7 +399,7 @@ export function startVoiceRecognition(
   recognition.continuous = false;
   recognition.interimResults = false;
   recognition.lang = 'en-US';
-  recognition.maxAlternatives = 3; // Get multiple alternatives for better parsing
+  recognition.maxAlternatives = 5; // Get more alternatives for better parsing
   
   recognition.onstart = () => {
     console.log('Voice recognition started');
@@ -347,14 +407,18 @@ export function startVoiceRecognition(
   };
   
   recognition.onresult = (event: any) => {
+    console.log('Voice recognition results received:', event.results);
+    
     // Try multiple alternatives for better accuracy
     let bestResult: VoiceResult = {};
     let bestScore = 0;
+    let allTranscripts: string[] = [];
     
     for (let i = 0; i < event.results[0].length; i++) {
-      const transcript = event.results[0][i].transcript;
-      const confidence = event.results[0][i].confidence;
+      const transcript = event.results[0][i].transcript.trim();
+      const confidence = event.results[0][i].confidence || 0.5;
       
+      allTranscripts.push(transcript);
       console.log(`Alternative ${i + 1}: "${transcript}" (confidence: ${confidence})`);
       
       const result = parseVoiceInput(transcript);
@@ -366,7 +430,20 @@ export function startVoiceRecognition(
       }
     }
     
+    // If no good result found, try combining information from all alternatives
+    if (bestScore < 2) {
+      console.log('Low confidence results, trying to combine alternatives...');
+      bestResult = combineAlternatives(allTranscripts);
+    }
+    
     console.log('Best voice result:', bestResult);
+    
+    // Validate result before returning
+    if (!bestResult.amount && !bestResult.description) {
+      onError('Could not understand the expense details. Please try speaking more clearly. Example: "Coffee 50 rupees today"');
+      return;
+    }
+    
     onResult(bestResult);
   };
   
@@ -375,7 +452,7 @@ export function startVoiceRecognition(
     let errorMessage = 'Speech recognition error';
     switch (event.error) {
       case 'no-speech':
-        errorMessage = 'No speech detected. Please try again and speak clearly.';
+        errorMessage = 'No speech detected. Please try again and speak clearly. Example: "Pizza 200 rupees yesterday"';
         break;
       case 'audio-capture':
         errorMessage = 'Microphone not accessible. Please check permissions and try again.';
@@ -389,8 +466,11 @@ export function startVoiceRecognition(
       case 'aborted':
         errorMessage = 'Voice recognition was cancelled.';
         break;
+      case 'service-not-allowed':
+        errorMessage = 'Speech recognition service not allowed. Please try again.';
+        break;
       default:
-        errorMessage = `Speech recognition error: ${event.error}. Please try again.`;
+        errorMessage = `Speech recognition error: ${event.error}. Please try again with clear speech.`;
     }
     onError(errorMessage);
   };
@@ -404,7 +484,7 @@ export function startVoiceRecognition(
     recognition.start();
   } catch (error) {
     console.error('Failed to start voice recognition:', error);
-    onError('Failed to start speech recognition. Please try again.');
+    onError('Failed to start speech recognition. Please ensure you have a microphone connected and try again.');
   }
   
   return () => {
@@ -420,10 +500,27 @@ export function startVoiceRecognition(
 function calculateResultScore(result: VoiceResult): number {
   let score = 0;
   
-  if (result.amount && result.amount > 0) score += 3;
-  if (result.description && result.description.length > 2) score += 2;
-  if (result.date) score += 1;
+  if (result.amount && result.amount > 0) score += 4;
+  if (result.description && result.description.length > 2) score += 3;
+  if (result.date) score += 2;
   if (result.quantity && result.quantity > 1) score += 1;
   
   return score;
+}
+
+// Combine information from multiple alternatives when individual results are poor
+function combineAlternatives(transcripts: string[]): VoiceResult {
+  const combined: VoiceResult = {};
+  
+  for (const transcript of transcripts) {
+    const result = parseVoiceInput(transcript);
+    
+    // Take the first valid value found for each field
+    if (!combined.amount && result.amount) combined.amount = result.amount;
+    if (!combined.description && result.description) combined.description = result.description;
+    if (!combined.date && result.date) combined.date = result.date;
+    if (!combined.quantity && result.quantity) combined.quantity = result.quantity;
+  }
+  
+  return combined;
 }

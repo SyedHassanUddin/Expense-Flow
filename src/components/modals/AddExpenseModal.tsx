@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Plus, Mic, Camera, Loader, Upload } from 'lucide-react';
+import { X, Plus, Mic, Camera, Loader, Upload, AlertTriangle } from 'lucide-react';
 import { ExpenseFormData, Currency } from '../../types/expense';
 import { startVoiceRecognition, VoiceResult } from '../../utils/voiceRecognition';
 import { processReceiptImage, ReceiptData } from '../../utils/receiptOCR';
@@ -30,6 +30,8 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const [isListening, setIsListening] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isProcessingReceipt, setIsProcessingReceipt] = useState(false);
+  const [voiceError, setVoiceError] = useState<string>('');
+  const [ocrError, setOcrError] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,6 +44,8 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         description: initialData?.description || '',
         date: initialData?.date || new Date().toISOString().split('T')[0]
       });
+      setVoiceError('');
+      setOcrError('');
     }
   }, [isOpen, initialData]);
 
@@ -94,8 +98,18 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const handleVoiceInput = () => {
     if (isListening) return;
     
+    setVoiceError('');
+    
     startVoiceRecognition(
       (result: VoiceResult) => {
+        console.log('Voice recognition result:', result);
+        
+        // Check if we got meaningful data
+        if (!result.amount && !result.description) {
+          setVoiceError('Could not understand the expense details. Please try speaking more clearly.');
+          return;
+        }
+        
         setFormData(prev => ({
           ...prev,
           ...(result.amount && { amount: result.amount.toString() }),
@@ -107,6 +121,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         toast.success('Voice input captured! 🎤');
       },
       (error: string) => {
+        setVoiceError(error);
         toast.error(error);
       },
       () => setIsListening(true),
@@ -116,20 +131,26 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 
   const handleReceiptScan = async (file: File) => {
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select a valid image file');
+      const error = 'Please select a valid image file (JPG, PNG, WebP)';
+      setOcrError(error);
+      toast.error(error);
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('Image file is too large. Please select a file smaller than 10MB');
+      const error = 'Image file is too large. Please select a file smaller than 10MB';
+      setOcrError(error);
+      toast.error(error);
       return;
     }
 
     setIsProcessingReceipt(true);
+    setOcrError('');
     
     try {
       const data = await processReceiptImage(file, (progress) => {
         // You can add progress updates here if needed
+        console.log('OCR Progress:', progress);
       });
 
       if (data.amount || data.date || data.description) {
@@ -142,10 +163,14 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         
         toast.success('Receipt scanned successfully! 📷');
       } else {
-        toast.error('Could not extract data from receipt. Please try again or enter manually.');
+        const error = 'Could not extract expense data from receipt. Please try manual entry or a clearer image.';
+        setOcrError(error);
+        toast.error(error);
       }
-    } catch (error) {
-      toast.error('Failed to process receipt. Please try again.');
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to process receipt. Please try again.';
+      setOcrError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsProcessingReceipt(false);
     }
@@ -156,6 +181,8 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     if (file) {
       handleReceiptScan(file);
     }
+    // Reset input value to allow selecting the same file again
+    event.target.value = '';
   };
 
   const handleCameraCapture = () => {
@@ -339,6 +366,31 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
               </button>
             </div>
           </div>
+
+          {/* Error Messages */}
+          {voiceError && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+              <div className="flex items-start">
+                <AlertTriangle size={16} className="text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="text-sm font-semibold text-red-800 mb-1">Voice Recognition Error</h4>
+                  <p className="text-sm text-red-700">{voiceError}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {ocrError && (
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-3">
+              <div className="flex items-start">
+                <AlertTriangle size={16} className="text-orange-500 mr-2 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="text-sm font-semibold text-orange-800 mb-1">Receipt Scanning Error</h4>
+                  <p className="text-sm text-orange-700">{ocrError}</p>
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* Help Text */}
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
