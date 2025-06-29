@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './components/auth/AuthProvider';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
 import Hero from './components/Hero';
+import FeatureGuide from './components/FeatureGuide';
 import SummaryCards from './components/SummaryCards';
 import ExpenseList from './components/ExpenseList';
 import Footer from './components/Footer';
@@ -284,6 +285,8 @@ const MainApp = () => {
       />
       
       <Hero />
+      
+      <FeatureGuide />
       
       <SummaryCards 
         expenses={filteredExpenses}

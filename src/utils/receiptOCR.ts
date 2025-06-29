@@ -18,32 +18,46 @@ export async function processReceiptImage(
   onProgress?: (progress: OCRProgress) => void
 ): Promise<ReceiptData> {
   try {
-    // Initialize Tesseract worker
+    console.log('Starting OCR processing for file:', imageFile.name);
+    
+    // Initialize Tesseract worker with enhanced settings
     const worker = await Tesseract.createWorker('eng', 1, {
       logger: (m) => {
+        console.log('OCR Progress:', m);
         if (onProgress) {
           onProgress({
-            status: m.status,
+            status: m.status || 'processing',
             progress: m.progress || 0
           });
         }
       }
     });
 
+    // Set parameters for better receipt recognition
+    await worker.setParameters({
+      'tessedit_char_whitelist': '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,/$₹€£:-/ ',
+      'tessedit_pageseg_mode': Tesseract.PSM.SINGLE_BLOCK,
+      'preserve_interword_spaces': '1'
+    });
+
     // Process the image
-    const { data: { text } } = await worker.recognize(imageFile);
+    const { data: { text, confidence } } = await worker.recognize(imageFile);
+    
+    console.log('OCR completed with confidence:', confidence);
+    console.log('Raw OCR text:', text);
     
     // Terminate worker to free memory
     await worker.terminate();
 
-    // Parse the extracted text
+    // Parse the extracted text with enhanced algorithms
     const receiptData = parseReceiptText(text);
     receiptData.rawText = text;
 
+    console.log('Parsed receipt data:', receiptData);
     return receiptData;
   } catch (error) {
     console.error('OCR processing failed:', error);
-    throw new Error('Failed to process receipt image. Please try again.');
+    throw new Error('Failed to process receipt image. Please ensure the image is clear and try again.');
   }
 }
 
@@ -51,16 +65,18 @@ function parseReceiptText(text: string): ReceiptData {
   const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
   const result: ReceiptData = {};
 
-  // Extract amount (look for total, subtotal, amount patterns)
+  console.log('Parsing receipt lines:', lines);
+
+  // Extract amount with enhanced patterns
   result.amount = extractAmount(text);
   
-  // Extract date
+  // Extract date with better recognition
   result.date = extractDate(text);
   
-  // Extract description (merchant name or first meaningful line)
+  // Extract description (merchant name or meaningful identifier)
   result.description = extractDescription(lines);
   
-  // Extract items (optional)
+  // Extract items (optional, for detailed receipts)
   result.items = extractItems(lines);
 
   return result;
@@ -69,34 +85,43 @@ function parseReceiptText(text: string): ReceiptData {
 function extractAmount(text: string): number | undefined {
   const cleanText = text.toLowerCase();
   
-  // Patterns for total amounts
+  // Enhanced patterns for total amounts with better regex
   const totalPatterns = [
-    /total[:\s]*\$?(\d+\.?\d*)/i,
-    /amount[:\s]*\$?(\d+\.?\d*)/i,
-    /subtotal[:\s]*\$?(\d+\.?\d*)/i,
-    /grand total[:\s]*\$?(\d+\.?\d*)/i,
-    /final total[:\s]*\$?(\d+\.?\d*)/i,
-    /balance[:\s]*\$?(\d+\.?\d*)/i
+    // Common total patterns
+    /(?:total|amount|sum|grand\s*total|final\s*total|balance|due)\s*:?\s*(?:\$|₹|€|£)?\s*(\d+\.?\d*)/gi,
+    /(?:\$|₹|€|£)\s*(\d+\.?\d*)\s*(?:total|amount|sum|due)/gi,
+    
+    // Subtotal patterns (fallback)
+    /(?:subtotal|sub\s*total)\s*:?\s*(?:\$|₹|€|£)?\s*(\d+\.?\d*)/gi,
+    
+    // Amount patterns
+    /(?:amount|amt)\s*:?\s*(?:\$|₹|€|£)?\s*(\d+\.?\d*)/gi,
+    
+    // Payment patterns
+    /(?:paid|payment|pay)\s*:?\s*(?:\$|₹|€|£)?\s*(\d+\.?\d*)/gi
   ];
 
   // Try to find total amount first
   for (const pattern of totalPatterns) {
-    const match = cleanText.match(pattern);
-    if (match) {
+    const matches = Array.from(cleanText.matchAll(pattern));
+    for (const match of matches) {
       const amount = parseFloat(match[1]);
-      if (!isNaN(amount) && amount > 0) {
+      if (!isNaN(amount) && amount > 0 && amount < 100000) { // Reasonable range
+        console.log('Found total amount:', amount, 'from pattern:', pattern.source);
         return amount;
       }
     }
   }
 
-  // If no total found, look for currency symbols with amounts
+  // Enhanced currency symbol patterns
   const currencyPatterns = [
-    /\$(\d+\.?\d*)/g,
-    /₹(\d+\.?\d*)/g,
-    /€(\d+\.?\d*)/g,
-    /£(\d+\.?\d*)/g,
-    /(\d+\.?\d*)\s*(?:rs|rupees|dollars?|euros?|pounds?)/gi
+    /\$\s*(\d+\.?\d*)/g,
+    /₹\s*(\d+\.?\d*)/g,
+    /€\s*(\d+\.?\d*)/g,
+    /£\s*(\d+\.?\d*)/g,
+    /(\d+\.?\d*)\s*(?:rs|rupees|dollars?|euros?|pounds?|usd|eur|gbp)/gi,
+    // Decimal amounts
+    /(\d+\.\d{2})\b/g
   ];
 
   const amounts: number[] = [];
@@ -105,15 +130,35 @@ function extractAmount(text: string): number | undefined {
     let match;
     while ((match = pattern.exec(text)) !== null) {
       const amount = parseFloat(match[1]);
-      if (!isNaN(amount) && amount > 0) {
+      if (!isNaN(amount) && amount > 0 && amount < 100000) {
         amounts.push(amount);
       }
     }
   }
 
-  // Return the largest amount found (likely to be the total)
   if (amounts.length > 0) {
-    return Math.max(...amounts);
+    // Return the largest amount found (likely to be the total)
+    const maxAmount = Math.max(...amounts);
+    console.log('Found max amount from currency patterns:', maxAmount);
+    return maxAmount;
+  }
+
+  // Last resort: look for any decimal number that could be a price
+  const decimalPattern = /\b(\d{1,4}\.\d{2})\b/g;
+  const decimalAmounts: number[] = [];
+  let match;
+  
+  while ((match = decimalPattern.exec(text)) !== null) {
+    const amount = parseFloat(match[1]);
+    if (amount > 1 && amount < 10000) { // Reasonable price range
+      decimalAmounts.push(amount);
+    }
+  }
+  
+  if (decimalAmounts.length > 0) {
+    const maxDecimal = Math.max(...decimalAmounts);
+    console.log('Found max decimal amount:', maxDecimal);
+    return maxDecimal;
   }
 
   return undefined;
@@ -122,18 +167,22 @@ function extractAmount(text: string): number | undefined {
 function extractDate(text: string): string | undefined {
   const today = new Date();
   
-  // Date patterns to match
+  // Enhanced date patterns
   const datePatterns = [
     // MM/DD/YYYY or MM-DD-YYYY
     /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/g,
-    // DD/MM/YYYY or DD-MM-YYYY
+    // DD/MM/YYYY or DD-MM-YYYY (European format)
     /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/g,
     // MM/DD/YY or MM-DD-YY
     /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})/g,
     // Month DD, YYYY
     /(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2}),?\s+(\d{4})/gi,
     // DD Month YYYY
-    /(\d{1,2})\s+(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{4})/gi
+    /(\d{1,2})\s+(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{4})/gi,
+    // YYYY-MM-DD (ISO format)
+    /(\d{4})-(\d{1,2})-(\d{1,2})/g,
+    // DD.MM.YYYY (European format)
+    /(\d{1,2})\.(\d{1,2})\.(\d{4})/g
   ];
 
   for (const pattern of datePatterns) {
@@ -159,6 +208,11 @@ function extractDate(text: string): string | undefined {
           month = monthNames.indexOf(match[2].toLowerCase()) + 1;
           year = parseInt(match[3]);
         }
+      } else if (pattern.source.includes('(\\d{4})-(\\d{1,2})-(\\d{1,2})')) {
+        // ISO format YYYY-MM-DD
+        year = parseInt(match[1]);
+        month = parseInt(match[2]);
+        day = parseInt(match[3]);
       } else {
         // Numeric date patterns
         const part1 = parseInt(match[1]);
@@ -170,19 +224,32 @@ function extractDate(text: string): string | undefined {
           yearPart += yearPart < 50 ? 2000 : 1900;
         }
         
-        // Determine if it's MM/DD or DD/MM based on values
-        if (part1 > 12) {
-          // Must be DD/MM
+        // Smart date format detection
+        if (part1 > 12 && part2 <= 12) {
+          // Must be DD/MM format
           day = part1;
           month = part2;
-        } else if (part2 > 12) {
-          // Must be MM/DD
+        } else if (part2 > 12 && part1 <= 12) {
+          // Must be MM/DD format
           month = part1;
           day = part2;
+        } else if (part1 <= 12 && part2 <= 12) {
+          // Ambiguous - use context or default to MM/DD
+          // Check if we're in US context (dollar signs) vs European context
+          const hasDollar = /\$/.test(text);
+          const hasEuro = /€/.test(text);
+          
+          if (hasEuro || pattern.source.includes('\\.')) {
+            // European format DD/MM
+            day = part1;
+            month = part2;
+          } else {
+            // US format MM/DD
+            month = part1;
+            day = part2;
+          }
         } else {
-          // Ambiguous - assume MM/DD (US format) for receipts
-          month = part1;
-          day = part2;
+          continue; // Invalid date
         }
         
         year = yearPart;
@@ -191,8 +258,10 @@ function extractDate(text: string): string | undefined {
       // Validate date
       if (month >= 1 && month <= 12 && day >= 1 && day <= 31 && year >= 1900 && year <= today.getFullYear() + 1) {
         const date = new Date(year, month - 1, day);
-        if (date.getMonth() === month - 1) { // Valid date
-          return date.toISOString().split('T')[0];
+        if (date.getMonth() === month - 1 && date.getDate() === day) { // Valid date
+          const dateString = date.toISOString().split('T')[0];
+          console.log('Extracted date:', dateString);
+          return dateString;
         }
       }
     }
@@ -202,7 +271,7 @@ function extractDate(text: string): string | undefined {
 }
 
 function extractDescription(lines: string[]): string | undefined {
-  // Skip common receipt headers and look for merchant name
+  // Enhanced patterns to skip
   const skipPatterns = [
     /^\d+$/,
     /^receipt$/i,
@@ -220,20 +289,51 @@ function extractDescription(lines: string[]): string | undefined {
     /^visit us/i,
     /^www\./i,
     /^tel:/i,
-    /^phone:/i
+    /^phone:/i,
+    /^address/i,
+    /^location/i,
+    /^store/i,
+    /^cashier/i,
+    /^server/i,
+    /^table/i,
+    /^order/i,
+    /^transaction/i,
+    /^ref/i,
+    /^reference/i
   ];
 
+  // Look for merchant name or business identifier
   for (const line of lines) {
-    if (line.length < 3 || line.length > 50) continue;
+    if (line.length < 2 || line.length > 50) continue;
     
     // Skip lines that match common patterns
     if (skipPatterns.some(pattern => pattern.test(line))) continue;
     
-    // Skip lines that are mostly numbers or symbols
-    if (/^[\d\s\.\-\$₹€£,]+$/.test(line)) continue;
+    // Skip lines that are mostly numbers, symbols, or currency
+    if (/^[\d\s\.\-\$₹€£,\/:]+$/.test(line)) continue;
     
-    // This is likely the merchant name or description
-    return line.charAt(0).toUpperCase() + line.slice(1).toLowerCase();
+    // Skip lines with too many special characters
+    if ((line.match(/[^\w\s]/g) || []).length > line.length * 0.3) continue;
+    
+    // Look for lines that seem like business names
+    if (/^[A-Z][a-zA-Z\s&'-]+$/.test(line) || 
+        /\b(?:restaurant|cafe|coffee|shop|store|market|pharmacy|gas|station|hotel|bar|pub)\b/i.test(line)) {
+      const cleaned = line.charAt(0).toUpperCase() + line.slice(1).toLowerCase();
+      console.log('Extracted description:', cleaned);
+      return cleaned;
+    }
+  }
+
+  // Fallback: use the first meaningful line
+  for (const line of lines) {
+    if (line.length >= 3 && line.length <= 30) {
+      if (!skipPatterns.some(pattern => pattern.test(line)) && 
+          !/^[\d\s\.\-\$₹€£,]+$/.test(line)) {
+        const cleaned = line.charAt(0).toUpperCase() + line.slice(1).toLowerCase();
+        console.log('Fallback description:', cleaned);
+        return cleaned;
+      }
+    }
   }
 
   return undefined;
@@ -246,23 +346,36 @@ function extractItems(lines: string[]): string[] {
     // Look for lines that might be items (have text and possibly a price)
     if (line.length > 3 && line.length < 100) {
       // Check if line contains both text and numbers (potential item with price)
-      const hasText = /[a-zA-Z]{3,}/.test(line);
+      const hasText = /[a-zA-Z]{2,}/.test(line);
       const hasPrice = /\d+\.?\d*/.test(line);
       
-      if (hasText && hasPrice && !line.toLowerCase().includes('total')) {
+      if (hasText && hasPrice && 
+          !line.toLowerCase().includes('total') && 
+          !line.toLowerCase().includes('subtotal') &&
+          !line.toLowerCase().includes('tax') &&
+          !line.toLowerCase().includes('change')) {
+        
         // Clean up the item name (remove prices and extra symbols)
-        const cleanItem = line
-          .replace(/\$?\d+\.?\d*/g, '')
-          .replace(/[^\w\s]/g, ' ')
-          .replace(/\s+/g, ' ')
+        let cleanItem = line
+          .replace(/\$?\d+\.?\d*/g, '') // Remove prices
+          .replace(/[^\w\s]/g, ' ') // Remove special characters
+          .replace(/\s+/g, ' ') // Normalize spaces
           .trim();
         
-        if (cleanItem.length > 2) {
-          items.push(cleanItem);
+        // Further cleaning
+        cleanItem = cleanItem
+          .split(' ')
+          .filter(word => word.length > 1 && !/^\d+$/.test(word))
+          .join(' ');
+        
+        if (cleanItem.length > 2 && cleanItem.length < 50) {
+          const formattedItem = cleanItem.charAt(0).toUpperCase() + cleanItem.slice(1).toLowerCase();
+          items.push(formattedItem);
         }
       }
     }
   }
 
+  console.log('Extracted items:', items);
   return items.slice(0, 5); // Limit to first 5 items
 }
