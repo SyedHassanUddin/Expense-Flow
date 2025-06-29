@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Plus, Mic, Camera, Loader, Upload, AlertTriangle, Volume2 } from 'lucide-react';
+import { X, Plus, Mic, Camera, Loader, Upload, AlertTriangle, Volume2, Tag, Check, ChevronDown } from 'lucide-react';
 import { ExpenseFormData, Currency } from '../../types/expense';
 import { startVoiceRecognition, VoiceResult } from '../../utils/voiceRecognition';
 import { processReceiptImage, ReceiptData } from '../../utils/receiptOCR';
+import { getAllCategories, addCustomCategory, categorizeExpense, getCategoryColor } from '../../utils/categories';
 import toast from 'react-hot-toast';
 
 interface AddExpenseModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: ExpenseFormData) => void;
+  onSubmit: (data: ExpenseFormData & { category?: string }) => void;
   currency: Currency;
   initialData?: Partial<ExpenseFormData>;
 }
@@ -27,6 +28,12 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     date: new Date().toISOString().split('T')[0]
   });
   
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [newCategoryInput, setNewCategoryInput] = useState('');
+  const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
+  
   const [isListening, setIsListening] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isProcessingReceipt, setIsProcessingReceipt] = useState(false);
@@ -35,6 +42,20 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const [currentTranscript, setCurrentTranscript] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const categoryDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Load categories on mount
+  useEffect(() => {
+    setCategories(getAllCategories());
+  }, []);
+
+  // Auto-categorize when description changes
+  useEffect(() => {
+    if (formData.description && !selectedCategory) {
+      const autoCategory = categorizeExpense(formData.description);
+      setSelectedCategory(autoCategory);
+    }
+  }, [formData.description, selectedCategory]);
 
   // Reset form when modal opens/closes or initialData changes
   useEffect(() => {
@@ -45,11 +66,28 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         description: initialData?.description || '',
         date: initialData?.date || new Date().toISOString().split('T')[0]
       });
+      setSelectedCategory('');
       setVoiceError('');
       setOcrError('');
       setCurrentTranscript('');
+      setShowCategoryDropdown(false);
+      setShowNewCategoryInput(false);
+      setNewCategoryInput('');
     }
   }, [isOpen, initialData]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
+        setShowCategoryDropdown(false);
+        setShowNewCategoryInput(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Close modal on Escape key
   useEffect(() => {
@@ -77,8 +115,9 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       await new Promise(resolve => setTimeout(resolve, 300)); // Simulate processing
       onSubmit({
         ...formData,
+        category: selectedCategory || categorizeExpense(formData.description),
         source: initialData?.amount ? 'receipt' : 'manual' // Mark as receipt if came from OCR
-      } as ExpenseFormData);
+      } as ExpenseFormData & { category: string });
       
       // Reset form
       setFormData({
@@ -87,6 +126,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         description: '',
         date: new Date().toISOString().split('T')[0]
       });
+      setSelectedCategory('');
       
       toast.success('Expense added successfully! 🎉');
       onClose();
@@ -212,6 +252,44 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
+    setShowCategoryDropdown(false);
+    setShowNewCategoryInput(false);
+  };
+
+  const handleAddNewCategory = () => {
+    const trimmed = newCategoryInput.trim();
+    if (!trimmed) {
+      toast.error('Please enter a category name');
+      return;
+    }
+
+    if (trimmed.length > 30) {
+      toast.error('Category name must be 30 characters or less');
+      return;
+    }
+
+    const success = addCustomCategory(trimmed);
+    if (success) {
+      setCategories(getAllCategories());
+      setSelectedCategory(trimmed);
+      setNewCategoryInput('');
+      setShowNewCategoryInput(false);
+      setShowCategoryDropdown(false);
+      toast.success(`Category "${trimmed}" added! 🏷️`);
+    } else {
+      toast.error('Category already exists or invalid name');
+    }
+  };
+
+  const handleNewCategoryKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddNewCategory();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -301,6 +379,101 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
               placeholder="What did you spend on?"
               required
             />
+          </div>
+
+          {/* Category Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Category
+            </label>
+            <div className="relative" ref={categoryDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 text-left flex items-center justify-between"
+              >
+                <div className="flex items-center">
+                  {selectedCategory && (
+                    <div
+                      className="w-3 h-3 rounded-full mr-2"
+                      style={{ backgroundColor: getCategoryColor(selectedCategory) }}
+                    ></div>
+                  )}
+                  <span className={selectedCategory ? 'text-gray-900' : 'text-gray-500'}>
+                    {selectedCategory || 'Select category...'}
+                  </span>
+                </div>
+                <ChevronDown size={16} className={`text-gray-400 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showCategoryDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto">
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      onClick={() => handleCategorySelect(category)}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center transition-colors"
+                    >
+                      <div
+                        className="w-3 h-3 rounded-full mr-3"
+                        style={{ backgroundColor: getCategoryColor(category) }}
+                      ></div>
+                      <span className="text-gray-900">{category}</span>
+                      {selectedCategory === category && (
+                        <Check size={16} className="text-blue-500 ml-auto" />
+                      )}
+                    </button>
+                  ))}
+                  
+                  {/* Add New Category Option */}
+                  <div className="border-t border-gray-200">
+                    {!showNewCategoryInput ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowNewCategoryInput(true)}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center text-blue-600 transition-colors"
+                      >
+                        <Plus size={16} className="mr-3" />
+                        <span>Add new category</span>
+                      </button>
+                    ) : (
+                      <div className="p-3 space-y-2">
+                        <input
+                          type="text"
+                          value={newCategoryInput}
+                          onChange={(e) => setNewCategoryInput(e.target.value)}
+                          onKeyPress={handleNewCategoryKeyPress}
+                          placeholder="Enter category name..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white text-gray-900"
+                          maxLength={30}
+                          autoFocus
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={handleAddNewCategory}
+                            className="flex-1 bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600 transition-colors"
+                          >
+                            Add
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowNewCategoryInput(false);
+                              setNewCategoryInput('');
+                            }}
+                            className="flex-1 bg-gray-200 text-gray-700 px-3 py-1 rounded-lg text-sm hover:bg-gray-300 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           
           {/* Date */}
@@ -443,6 +616,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
               <div>🎤 <strong>Voice:</strong> "Pizza 200 rupees today"</div>
               <div>📷 <strong>Camera:</strong> Take photo of receipt</div>
               <div>📤 <strong>Upload:</strong> Select receipt from gallery</div>
+              <div>🏷️ <strong>Category:</strong> Auto-detected or select/create custom</div>
             </div>
           </div>
           

@@ -31,6 +31,69 @@ export const categoryKeywords: Record<string, string[]> = {
   'Other': []
 };
 
+// Default categories that are always available
+export const defaultCategories = [
+  'Food & Dining',
+  'Transportation', 
+  'Shopping',
+  'Entertainment',
+  'Healthcare',
+  'Utilities',
+  'Education',
+  'Other'
+];
+
+// Get custom categories from localStorage
+export function getCustomCategories(): string[] {
+  try {
+    const stored = localStorage.getItem('expenseflow-custom-categories');
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error('Failed to load custom categories:', error);
+    return [];
+  }
+}
+
+// Save custom categories to localStorage
+export function saveCustomCategories(categories: string[]): void {
+  try {
+    localStorage.setItem('expenseflow-custom-categories', JSON.stringify(categories));
+  } catch (error) {
+    console.error('Failed to save custom categories:', error);
+  }
+}
+
+// Add a new custom category
+export function addCustomCategory(category: string): boolean {
+  const trimmed = category.trim();
+  if (!trimmed || trimmed.length > 30) return false;
+  
+  const allCategories = getAllCategories();
+  if (allCategories.some(cat => cat.toLowerCase() === trimmed.toLowerCase())) {
+    return false; // Category already exists
+  }
+  
+  const customCategories = getCustomCategories();
+  const newCustomCategories = [...customCategories, trimmed];
+  saveCustomCategories(newCustomCategories);
+  return true;
+}
+
+// Get all categories (default + custom)
+export function getAllCategories(): string[] {
+  const customCategories = getCustomCategories();
+  return [...defaultCategories, ...customCategories];
+}
+
+// Remove a custom category
+export function removeCustomCategory(category: string): void {
+  if (defaultCategories.includes(category)) return; // Can't remove default categories
+  
+  const customCategories = getCustomCategories();
+  const filtered = customCategories.filter(cat => cat !== category);
+  saveCustomCategories(filtered);
+}
+
 export function categorizeExpense(description: string): string {
   const lowerDesc = description.toLowerCase();
   
@@ -57,3 +120,19 @@ export const categoryColors: Record<string, string> = {
   'Education': '#98D8C8',
   'Other': '#95A5A6'
 };
+
+// Get color for any category (including custom ones)
+export function getCategoryColor(category: string): string {
+  if (categoryColors[category]) {
+    return categoryColors[category];
+  }
+  
+  // Generate a consistent color for custom categories based on category name
+  const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F39C12', '#E74C3C', '#9B59B6'];
+  const hash = category.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+  
+  return colors[Math.abs(hash) % colors.length];
+}

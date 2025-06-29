@@ -104,13 +104,13 @@ const MainApp = () => {
     }
   }, [expenses, user]);
 
-  const handleAddExpense = async (formData: ExpenseFormData & { source?: string }) => {
+  const handleAddExpense = async (formData: ExpenseFormData & { source?: string; category?: string }) => {
     const newExpense = {
       amount: parseFloat(formData.amount),
       quantity: parseInt(formData.quantity),
       description: formData.description,
       date: formData.date,
-      category: categorizeExpense(formData.description),
+      category: formData.category || categorizeExpense(formData.description),
       currency: currency,
       source: formData.source || 'manual'
     };

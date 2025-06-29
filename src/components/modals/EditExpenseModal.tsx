@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { X, Save, Loader } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Save, Loader, ChevronDown, Check, Plus } from 'lucide-react';
 import { Expense, Currency } from '../../types/expense';
-import { categorizeExpense } from '../../utils/categories';
+import { getAllCategories, addCustomCategory, getCategoryColor } from '../../utils/categories';
 import toast from 'react-hot-toast';
 
 interface EditExpenseModalProps {
@@ -27,7 +27,17 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
     category: ''
   });
   
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [newCategoryInput, setNewCategoryInput] = useState('');
+  const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const categoryDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Load categories on mount
+  useEffect(() => {
+    setCategories(getAllCategories());
+  }, []);
 
   // Populate form when expense changes
   useEffect(() => {
@@ -39,8 +49,24 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
         date: expense.date,
         category: expense.category
       });
+      setShowCategoryDropdown(false);
+      setShowNewCategoryInput(false);
+      setNewCategoryInput('');
     }
   }, [expense, isOpen]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
+        setShowCategoryDropdown(false);
+        setShowNewCategoryInput(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Close modal on Escape key
   useEffect(() => {
@@ -73,7 +99,7 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
         quantity: parseInt(formData.quantity),
         description: formData.description,
         date: formData.date,
-        category: categorizeExpense(formData.description),
+        category: formData.category,
         currency: currency
       };
       
@@ -89,6 +115,44 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleCategorySelect = (category: string) => {
+    setFormData(prev => ({ ...prev, category }));
+    setShowCategoryDropdown(false);
+    setShowNewCategoryInput(false);
+  };
+
+  const handleAddNewCategory = () => {
+    const trimmed = newCategoryInput.trim();
+    if (!trimmed) {
+      toast.error('Please enter a category name');
+      return;
+    }
+
+    if (trimmed.length > 30) {
+      toast.error('Category name must be 30 characters or less');
+      return;
+    }
+
+    const success = addCustomCategory(trimmed);
+    if (success) {
+      setCategories(getAllCategories());
+      setFormData(prev => ({ ...prev, category: trimmed }));
+      setNewCategoryInput('');
+      setShowNewCategoryInput(false);
+      setShowCategoryDropdown(false);
+      toast.success(`Category "${trimmed}" added! 🏷️`);
+    } else {
+      toast.error('Category already exists or invalid name');
+    }
+  };
+
+  const handleNewCategoryKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddNewCategory();
+    }
   };
 
   if (!isOpen || !expense) return null;
@@ -128,7 +192,7 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
                 min="0"
                 value={formData.amount}
                 onChange={(e) => handleInputChange('amount', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white/80"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900"
                 placeholder="0.00"
                 required
               />
@@ -143,7 +207,7 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
                 min="1"
                 value={formData.quantity}
                 onChange={(e) => handleInputChange('quantity', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white/80"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900"
                 placeholder="1"
                 required
               />
@@ -159,10 +223,105 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
               type="text"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white/80"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900"
               placeholder="What did you spend on?"
               required
             />
+          </div>
+
+          {/* Category Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Category
+            </label>
+            <div className="relative" ref={categoryDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 text-left flex items-center justify-between"
+              >
+                <div className="flex items-center">
+                  {formData.category && (
+                    <div
+                      className="w-3 h-3 rounded-full mr-2"
+                      style={{ backgroundColor: getCategoryColor(formData.category) }}
+                    ></div>
+                  )}
+                  <span className={formData.category ? 'text-gray-900' : 'text-gray-500'}>
+                    {formData.category || 'Select category...'}
+                  </span>
+                </div>
+                <ChevronDown size={16} className={`text-gray-400 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showCategoryDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto">
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      onClick={() => handleCategorySelect(category)}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center transition-colors"
+                    >
+                      <div
+                        className="w-3 h-3 rounded-full mr-3"
+                        style={{ backgroundColor: getCategoryColor(category) }}
+                      ></div>
+                      <span className="text-gray-900">{category}</span>
+                      {formData.category === category && (
+                        <Check size={16} className="text-blue-500 ml-auto" />
+                      )}
+                    </button>
+                  ))}
+                  
+                  {/* Add New Category Option */}
+                  <div className="border-t border-gray-200">
+                    {!showNewCategoryInput ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowNewCategoryInput(true)}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center text-blue-600 transition-colors"
+                      >
+                        <Plus size={16} className="mr-3" />
+                        <span>Add new category</span>
+                      </button>
+                    ) : (
+                      <div className="p-3 space-y-2">
+                        <input
+                          type="text"
+                          value={newCategoryInput}
+                          onChange={(e) => setNewCategoryInput(e.target.value)}
+                          onKeyPress={handleNewCategoryKeyPress}
+                          placeholder="Enter category name..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white text-gray-900"
+                          maxLength={30}
+                          autoFocus
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={handleAddNewCategory}
+                            className="flex-1 bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600 transition-colors"
+                          >
+                            Add
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowNewCategoryInput(false);
+                              setNewCategoryInput('');
+                            }}
+                            className="flex-1 bg-gray-200 text-gray-700 px-3 py-1 rounded-lg text-sm hover:bg-gray-300 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           
           {/* Date */}
@@ -174,19 +333,9 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
               type="date"
               value={formData.date}
               onChange={(e) => handleInputChange('date', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white/80"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900"
               required
             />
-          </div>
-          
-          {/* Category Preview */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
-            <p className="text-xs text-gray-600 font-medium mb-1">
-              Auto-detected category:
-            </p>
-            <p className="text-sm text-gray-800 font-semibold">
-              {categorizeExpense(formData.description)}
-            </p>
           </div>
           
           {/* Submit Button */}
