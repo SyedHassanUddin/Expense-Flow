@@ -6,7 +6,6 @@ import { categoryColors } from '../utils/categories';
 import { formatCurrency } from '../utils/dateFilters';
 import { convertExpenseAmount, formatCurrencyAmount } from '../utils/currencyConverter';
 import { TrendingUp, PieChart, Calendar, BarChart3, Loader } from 'lucide-react';
-import { GlassCard } from './ui/card';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Title);
 
@@ -123,27 +122,41 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
       datasets: [{
         label: 'Daily Spending',
         data: dailySpending,
-        borderColor: 'rgba(59, 130, 246, 0.8)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderColor: '#10B981',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
         tension: 0.4,
         fill: true,
-        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
-        pointBorderColor: 'rgba(255, 255, 255, 0.8)',
-        pointBorderWidth: 2,
+        pointBackgroundColor: '#10B981',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 3,
+        pointRadius: 6,
       }]
     };
   };
 
   const trendData = getSpendingTrendData();
   
+  // Pastel colors for the chart
+  const pastelColors = [
+    '#FFB6C1', // Light Pink
+    '#98FB98', // Pale Green
+    '#FFE4B5', // Moccasin
+    '#E0E6FF', // Lavender
+    '#FFEAA7', // Light Yellow
+    '#DDA0DD', // Plum
+    '#F0E68C', // Khaki
+    '#FFA07A'  // Light Salmon
+  ];
+  
   const chartData = {
     labels: Object.keys(categoryTotals),
     datasets: [{
       data: Object.values(categoryTotals),
-      backgroundColor: Object.keys(categoryTotals).map(cat => categoryColors[cat] || '#95A5A6'),
-      borderWidth: 0,
-      hoverBorderWidth: 3,
-      hoverBorderColor: 'rgba(255, 255, 255, 0.8)'
+      backgroundColor: pastelColors.slice(0, Object.keys(categoryTotals).length),
+      borderWidth: 3,
+      borderColor: '#ffffff',
+      hoverBorderWidth: 4,
+      hoverBorderColor: '#ffffff'
     }]
   };
   
@@ -155,11 +168,13 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
         display: false
       },
       tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: 'white',
-        bodyColor: 'white',
-        borderColor: 'rgba(255, 255, 255, 0.2)',
-        borderWidth: 1,
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        titleColor: '#374151',
+        bodyColor: '#374151',
+        borderColor: '#E5E7EB',
+        borderWidth: 2,
+        cornerRadius: 12,
+        padding: 12,
         callbacks: {
           label: (context: any) => {
             const label = context.label || '';
@@ -170,7 +185,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
         }
       }
     },
-    cutout: '65%'
+    cutout: '60%'
   };
 
   const trendOptions = {
@@ -181,11 +196,13 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
         display: false
       },
       tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: 'white',
-        bodyColor: 'white',
-        borderColor: 'rgba(255, 255, 255, 0.2)',
-        borderWidth: 1,
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        titleColor: '#374151',
+        bodyColor: '#374151',
+        borderColor: '#E5E7EB',
+        borderWidth: 2,
+        cornerRadius: 12,
+        padding: 12,
         callbacks: {
           label: (context: any) => {
             return `${context.label}: ${formatCurrencyAmount(context.raw, currency)}`;
@@ -197,10 +214,15 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
       y: {
         beginAtZero: true,
         grid: {
-          color: 'rgba(255, 255, 255, 0.1)'
+          color: 'rgba(0, 0, 0, 0.05)',
+          drawBorder: false
         },
         ticks: {
-          color: 'rgba(255, 255, 255, 0.7)',
+          color: '#6B7280',
+          font: {
+            family: 'Poppins',
+            size: 12
+          },
           callback: function(value: any) {
             return formatCurrencyAmount(value, currency);
           }
@@ -211,7 +233,11 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
           display: false
         },
         ticks: {
-          color: 'rgba(255, 255, 255, 0.7)'
+          color: '#6B7280',
+          font: {
+            family: 'Poppins',
+            size: 12
+          }
         }
       }
     }
@@ -229,149 +255,149 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
   return (
     <div className="max-w-6xl mx-auto px-4 -mt-8 relative z-20">
       {conversionError && (
-        <div className="mb-4 p-3 glass-card dark:glass-card-dark border border-yellow-400/30">
-          <p className="text-sm text-yellow-300">⚠️ {conversionError}</p>
+        <div className="mb-4 p-3 bg-yellow-100 border-2 border-yellow-300 rounded-2xl">
+          <p className="text-sm text-yellow-800">⚠️ {conversionError}</p>
         </div>
       )}
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Enhanced Total Expenses Card with Average Spending */}
-        <GlassCard className="p-6 hover:scale-105 transition-all duration-300 glow-blue">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-full p-3 glow-blue">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Enhanced Total Expenses Card */}
+        <div className="notebook-card p-8 soft-hover">
+          <div className="flex items-center justify-between mb-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center">
               <TrendingUp size={24} className="text-white" />
             </div>
             <div className="text-right">
-              <span className="text-sm text-white/70 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+              <span className="text-sm text-gray-600 bg-blue-100 px-3 py-1 rounded-full font-medium">
                 {getTimeFilterLabel()}
               </span>
               {isConverting && (
                 <div className="flex items-center mt-1">
-                  <Loader size={12} className="animate-spin mr-1 text-white/70" />
-                  <span className="text-xs text-white/70">Converting...</span>
+                  <Loader size={12} className="animate-spin mr-1 text-gray-500" />
+                  <span className="text-xs text-gray-500">Converting...</span>
                 </div>
               )}
             </div>
           </div>
           
-          <h3 className="text-2xl lg:text-3xl font-bold text-white mb-2">
+          <h3 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-2">
             {formatCurrencyAmount(totalAmount, currency)}
           </h3>
-          <p className="text-white/80 mb-4">Total Expenses</p>
+          <p className="text-gray-600 mb-6 font-medium">Total Expenses</p>
           
           {/* Average Spending Section */}
-          <div className="space-y-3 pt-4 border-t border-white/20">
+          <div className="space-y-4 pt-4 border-t-2 border-gray-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <BarChart3 size={16} className="text-blue-400 mr-2" />
-                <span className="text-sm text-white/70">Avg per transaction</span>
+                <BarChart3 size={16} className="text-blue-500 mr-2" />
+                <span className="text-sm text-gray-600 font-medium">Avg per transaction</span>
               </div>
-              <span className="text-sm font-semibold text-white">
+              <span className="text-sm font-bold text-gray-800">
                 {formatCurrencyAmount(averageSpending, currency)}
               </span>
             </div>
             
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <Calendar size={16} className="text-green-400 mr-2" />
-                <span className="text-sm text-white/70">
-                  Daily average ({timeFilter === 'today' ? 'today' : timeFilter})
+                <Calendar size={16} className="text-green-500 mr-2" />
+                <span className="text-sm text-gray-600 font-medium">
+                  Daily average
                 </span>
               </div>
-              <span className="text-sm font-semibold text-white">
+              <span className="text-sm font-bold text-gray-800">
                 {formatCurrencyAmount(dailyAverage, currency)}
               </span>
             </div>
             
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <Calendar size={16} className="text-purple-400 mr-2" />
-                <span className="text-sm text-white/70">Total transactions</span>
+                <Calendar size={16} className="text-purple-500 mr-2" />
+                <span className="text-sm text-gray-600 font-medium">Total transactions</span>
               </div>
-              <span className="text-sm font-semibold text-white">
+              <span className="text-sm font-bold text-gray-800">
                 {totalTransactions}
               </span>
             </div>
           </div>
 
           {/* Mini Trend Chart */}
-          <div className="mt-4 pt-4 border-t border-white/20">
+          <div className="mt-6 pt-4 border-t-2 border-gray-100">
             <div className="h-16">
               <Line data={trendData} options={trendOptions} />
             </div>
-            <p className="text-xs text-white/60 mt-2 text-center">
+            <p className="text-xs text-gray-500 mt-2 text-center font-medium">
               7-day spending trend
             </p>
           </div>
-        </GlassCard>
+        </div>
         
         {/* Enhanced Chart Card */}
-        <GlassCard className="p-6 hover:scale-105 transition-all duration-300 lg:col-span-2 glow-purple">
-          <div className="flex items-center justify-between mb-6">
+        <div className="notebook-card p-8 soft-hover lg:col-span-2">
+          <div className="flex items-center justify-between mb-8">
             <div className="flex items-center">
-              <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full p-3 mr-4 glow-green">
+              <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-pink-600 rounded-2xl flex items-center justify-center mr-4">
                 <PieChart size={24} className="text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-white">Spending Breakdown</h3>
+              <h3 className="text-2xl font-bold text-gray-800">Chart Analytics</h3>
             </div>
             {isConverting && (
-              <div className="flex items-center text-sm text-white/70">
+              <div className="flex items-center text-sm text-gray-600">
                 <Loader size={16} className="animate-spin mr-2" />
                 Converting currencies...
               </div>
             )}
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             {/* Chart */}
-            <div className="h-48 relative">
+            <div className="h-64 relative">
               {Object.keys(categoryTotals).length > 0 ? (
                 <>
                   <Doughnut data={chartData} options={chartOptions} />
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-white">
+                      <div className="text-2xl font-bold text-gray-800">
                         {totalTransactions}
                       </div>
-                      <div className="text-sm text-white/70">
+                      <div className="text-sm text-gray-600 font-medium">
                         Expenses
                       </div>
                     </div>
                   </div>
                 </>
               ) : (
-                <div className="h-full flex items-center justify-center text-white/60">
+                <div className="h-full flex items-center justify-center text-gray-400">
                   <div className="text-center">
                     <PieChart size={48} className="mx-auto mb-2 opacity-50" />
-                    <p>No expenses to display</p>
+                    <p className="font-medium">No expenses to display</p>
                   </div>
                 </div>
               )}
             </div>
             
             {/* Legend */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               {Object.entries(categoryTotals)
                 .sort(([,a], [,b]) => b - a)
                 .slice(0, 5)
-                .map(([category, amount]) => {
+                .map(([category, amount], index) => {
                   const percentage = ((amount / totalAmount) * 100).toFixed(1);
                   return (
                     <div key={category} className="flex items-center justify-between">
                       <div className="flex items-center">
                         <div 
-                          className="w-3 h-3 rounded-full mr-3 shadow-lg"
-                          style={{ backgroundColor: categoryColors[category] || '#95A5A6' }}
+                          className="w-4 h-4 rounded-full mr-3 border-2 border-white shadow-sm"
+                          style={{ backgroundColor: pastelColors[index] }}
                         ></div>
-                        <span className="text-sm text-white/80 truncate max-w-24">
+                        <span className="text-sm text-gray-700 font-medium truncate max-w-24">
                           {category}
                         </span>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-semibold text-white">
+                        <div className="text-sm font-bold text-gray-800">
                           {formatCurrencyAmount(amount, currency)}
                         </div>
-                        <div className="text-xs text-white/60">
+                        <div className="text-xs text-gray-500 font-medium">
                           {percentage}%
                         </div>
                       </div>
@@ -379,19 +405,29 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({ expenses, currency, timeFil
                   );
                 })}
               
+              {/* Tech Used Footer */}
+              <div className="pt-4 border-t-2 border-gray-100">
+                <div className="bg-gradient-to-r from-pink-100 to-blue-100 border-2 border-pink-200 rounded-2xl p-4">
+                  <p className="text-sm text-gray-700 font-bold mb-1">
+                    Tech Used: Chart.js
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    Displays category-wise spendings in a donut chart. Filters available: daily, weekly, monthly
+                  </p>
+                </div>
+              </div>
+              
               {/* Currency Conversion Info */}
               {convertedExpenses.length > 0 && !isConverting && (
-                <div className="pt-3 border-t border-white/20">
-                  <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg p-3 backdrop-blur-sm">
-                    <p className="text-xs text-blue-200">
-                      💱 Amounts converted to {currency} using real-time exchange rates
-                    </p>
-                  </div>
+                <div className="bg-blue-100 border-2 border-blue-200 rounded-2xl p-3">
+                  <p className="text-xs text-blue-700 font-medium">
+                    💱 Amounts converted to {currency} using real-time exchange rates
+                  </p>
                 </div>
               )}
             </div>
           </div>
-        </GlassCard>
+        </div>
       </div>
     </div>
   );

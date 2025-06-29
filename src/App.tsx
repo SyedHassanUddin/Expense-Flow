@@ -254,23 +254,23 @@ const MainApp = () => {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen animated-bg dark:animated-bg-dark flex items-center justify-center">
+      <div className="min-h-screen pastel-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white/80">Loading your expenses...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-500 mx-auto mb-4"></div>
+          <p className="text-gray-700 font-medium">Loading your expenses...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen animated-bg dark:animated-bg-dark relative overflow-hidden">
-      {/* Floating particles */}
-      <div className="particle w-4 h-4 bg-white/20 top-10 left-10"></div>
-      <div className="particle w-6 h-6 bg-white/10 top-32 right-20"></div>
-      <div className="particle w-3 h-3 bg-white/15 bottom-20 left-1/4"></div>
-      <div className="particle w-5 h-5 bg-white/10 top-1/2 right-1/3"></div>
-      <div className="particle w-2 h-2 bg-white/20 bottom-32 right-10"></div>
+    <div className="min-h-screen pastel-bg relative overflow-hidden">
+      {/* Floating decorative shapes */}
+      <div className="floating-shape w-16 h-16 bg-pink-200 top-10 left-10"></div>
+      <div className="floating-shape w-20 h-20 bg-yellow-200 top-32 right-20"></div>
+      <div className="floating-shape w-12 h-12 bg-green-200 bottom-20 left-1/4"></div>
+      <div className="floating-shape w-24 h-24 bg-blue-200 top-1/2 right-1/3"></div>
+      <div className="floating-shape w-8 h-8 bg-orange-200 bottom-32 right-10"></div>
 
       <Header 
         timeFilter={timeFilter}
@@ -363,10 +363,12 @@ function App() {
             style: {
               background: 'rgba(255, 255, 255, 0.95)',
               backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '12px',
-              color: '#333',
+              border: '2px solid rgba(16, 185, 129, 0.2)',
+              borderRadius: '16px',
+              color: '#374151',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+              fontFamily: 'Poppins, sans-serif',
+              fontWeight: '500',
             },
             success: {
               iconTheme: {

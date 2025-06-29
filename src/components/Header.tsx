@@ -42,70 +42,87 @@ const Header: React.FC<HeaderProps> = ({
     }
   };
 
+  const currencies: Currency[] = ['₹', '$', '€', '£'];
+
   return (
-    <header className="relative z-50">
-      <div className="glass-card dark:glass-card-dark border-0 border-b border-white/20 dark:border-white/10">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-full p-2 mr-3 glow-blue">
-                <TrendingUp size={24} className="text-white" />
-              </div>
-              <span className="text-xl font-bold gradient-text dark:gradient-text-dark">
-                ExpenseFlow
-              </span>
+    <header className="relative z-50 bg-white/80 backdrop-blur-md border-b-2 border-pink-100">
+      <div className="max-w-6xl mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl flex items-center justify-center mr-3 soft-hover">
+              <TrendingUp size={24} className="text-white" />
             </div>
+            <span className="text-2xl font-bold">
+              <span className="text-emerald-600">Expense</span>
+              <span className="text-amber-500">Flow</span>
+            </span>
+          </div>
 
-            {/* Right Side Controls */}
-            <div className="flex items-center space-x-3">
-              {/* User Info */}
-              {user ? (
-                <div className="flex items-center space-x-2 glass-card dark:glass-card-dark px-3 py-2 rounded-full">
-                  <div className="bg-green-500 rounded-full p-1">
-                    <User size={14} className="text-white" />
-                  </div>
-                  <span className="text-sm text-white/80 hidden sm:block">
-                    {user.email?.split('@')[0]}
-                  </span>
-                  <button
-                    onClick={handleSignOut}
-                    className="p-1 hover:bg-white/10 rounded-full transition-colors"
-                    title="Sign out"
-                  >
-                    <LogOut size={14} className="text-white/70" />
-                  </button>
-                </div>
-              ) : (
+          {/* Right Side Controls */}
+          <div className="flex items-center space-x-4">
+            {/* Currency Switcher */}
+            <div className="flex items-center space-x-1 bg-white rounded-full p-1 border-2 border-emerald-200 shadow-lg">
+              {currencies.map((curr) => (
                 <button
-                  onClick={onAuthRequired}
-                  className="glass-card dark:glass-card-dark px-4 py-2 rounded-full text-sm text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                  key={curr}
+                  onClick={() => onCurrencyChange(curr)}
+                  className={`currency-pill text-sm ${
+                    currency === curr ? 'active' : ''
+                  }`}
                 >
-                  Sign In
+                  {curr}
                 </button>
-              )}
-
-              {/* Theme Toggle */}
-              <div className="flex items-center space-x-2 glass-card dark:glass-card-dark px-3 py-2 rounded-full">
-                <Sun size={16} className="text-yellow-500" />
-                <Switch
-                  checked={theme === 'dark'}
-                  onCheckedChange={toggleTheme}
-                  className="data-[state=checked]:bg-slate-700 data-[state=unchecked]:bg-yellow-200"
-                />
-                <Moon size={16} className="text-slate-700 dark:text-slate-300" />
-              </div>
-
-              {/* Settings Dropdown */}
-              <SettingsDropdown
-                timeFilter={timeFilter}
-                onTimeFilterChange={onTimeFilterChange}
-                currency={currency}
-                onCurrencyChange={onCurrencyChange}
-                onExport={onExport}
-                onClearAll={onClearAll}
-                expenseCount={expenseCount}
-              />
+              ))}
             </div>
+
+            {/* User Info */}
+            {user ? (
+              <div className="flex items-center space-x-2 bg-white rounded-full px-4 py-2 border-2 border-green-200 shadow-lg">
+                <div className="bg-green-500 rounded-full p-1">
+                  <User size={14} className="text-white" />
+                </div>
+                <span className="text-sm text-gray-700 font-medium hidden sm:block">
+                  {user.email?.split('@')[0]}
+                </span>
+                <button
+                  onClick={handleSignOut}
+                  className="p-1 hover:bg-red-100 rounded-full transition-colors"
+                  title="Sign out"
+                >
+                  <LogOut size={14} className="text-red-500" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={onAuthRequired}
+                className="bg-white px-4 py-2 rounded-full text-sm text-gray-700 font-medium border-2 border-blue-200 hover:bg-blue-50 transition-colors shadow-lg"
+              >
+                Sign In
+              </button>
+            )}
+
+            {/* Theme Toggle */}
+            <div className="flex items-center space-x-2 bg-white rounded-full px-3 py-2 border-2 border-yellow-200 shadow-lg">
+              <Sun size={16} className="text-yellow-500" />
+              <Switch
+                checked={theme === 'dark'}
+                onCheckedChange={toggleTheme}
+                className="data-[state=checked]:bg-slate-700 data-[state=unchecked]:bg-yellow-200"
+              />
+              <Moon size={16} className="text-slate-700 dark:text-slate-300" />
+            </div>
+
+            {/* Settings Dropdown */}
+            <SettingsDropdown
+              timeFilter={timeFilter}
+              onTimeFilterChange={onTimeFilterChange}
+              currency={currency}
+              onCurrencyChange={onCurrencyChange}
+              onExport={onExport}
+              onClearAll={onClearAll}
+              expenseCount={expenseCount}
+            />
           </div>
         </div>
       </div>

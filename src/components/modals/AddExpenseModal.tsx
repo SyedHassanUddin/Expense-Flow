@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Plus, Mic, Camera, Loader, Upload } from 'lucide-react';
+import { X, Plus, Mic, Camera, Loader, Upload, Calendar } from 'lucide-react';
 import { ExpenseFormData, Currency } from '../../types/expense';
 import { startVoiceRecognition, VoiceResult } from '../../utils/voiceRecognition';
 import { processReceiptImage, ReceiptData } from '../../utils/receiptOCR';
@@ -193,14 +193,14 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
         onClick={onClose}
       />
       
       {/* Modal */}
-      <div className="relative w-full max-w-md bg-white/95 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-md notebook-card max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200/50">
+        <div className="flex items-center justify-between p-6 border-b-2 border-gray-100 bg-gradient-to-r from-green-50 to-blue-50">
           <h2 className="text-xl font-bold text-gray-800">Add New Expense</h2>
           <button
             onClick={onClose}
@@ -211,11 +211,11 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         </div>
         
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Amount and Quantity Row */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-bold text-gray-700 mb-2">
                 Amount ({currency})
               </label>
               <input
@@ -224,14 +224,14 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 min="0"
                 value={formData.amount}
                 onChange={(e) => handleInputChange('amount', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white/80"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white font-medium"
                 placeholder="0.00"
                 required
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-bold text-gray-700 mb-2">
                 Quantity
               </label>
               <input
@@ -239,7 +239,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 min="1"
                 value={formData.quantity}
                 onChange={(e) => handleInputChange('quantity', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white/80"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white font-medium"
                 placeholder="1"
                 required
               />
@@ -248,58 +248,68 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
           
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-bold text-gray-700 mb-2">
               Description
             </label>
             <input
               type="text"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white/80"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white font-medium"
               placeholder="What did you spend on?"
               required
             />
           </div>
           
-          {/* Date */}
+          {/* Date with Smart Autofill Badge */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              Smart Date Autofill
             </label>
-            <input
-              type="date"
-              value={formData.date}
-              onChange={(e) => handleInputChange('date', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white/80"
-              required
-            />
+            <div className="relative">
+              <input
+                type="date"
+                value={formData.date}
+                onChange={(e) => handleInputChange('date', e.target.value)}
+                className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white font-medium"
+                required
+              />
+              <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 text-orange-500" size={16} />
+            </div>
+            <p className="text-xs text-gray-500 mt-1 font-medium">
+              Sets today's date automatically on app load
+            </p>
           </div>
 
           {/* Input Methods Row */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Quick Input
+            <label className="block text-sm font-bold text-gray-700 mb-3">
+              Quick Input Methods
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-3">
               {/* Voice Input */}
               <button
                 type="button"
                 onClick={handleVoiceInput}
                 disabled={isListening || isProcessingReceipt}
-                className={`px-3 py-3 rounded-xl font-medium transition-all duration-300 ${
+                className={`p-4 rounded-2xl font-bold transition-all duration-300 border-2 ${
                   isListening
-                    ? 'bg-red-500 text-white animate-pulse'
-                    : 'bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700'
+                    ? 'bg-red-500 text-white animate-pulse border-red-600'
+                    : 'bg-purple-500 text-white hover:bg-purple-600 border-purple-600 soft-hover'
                 } disabled:opacity-50`}
               >
                 {isListening ? (
                   <div className="flex flex-col items-center">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse mb-1"></div>
+                    <div className="flex space-x-1 mb-2">
+                      <div className="voice-wave w-1 h-4 bg-white rounded-full"></div>
+                      <div className="voice-wave w-1 h-3 bg-white rounded-full"></div>
+                      <div className="voice-wave w-1 h-5 bg-white rounded-full"></div>
+                    </div>
                     <span className="text-xs">Listening</span>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center">
-                    <Mic size={16} className="mb-1" />
+                    <Mic size={20} className="mb-2" />
                     <span className="text-xs">Voice</span>
                   </div>
                 )}
@@ -310,16 +320,16 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 type="button"
                 onClick={handleCameraCapture}
                 disabled={isListening || isProcessingReceipt}
-                className="px-3 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-medium hover:from-green-600 hover:to-green-700 disabled:opacity-50 transition-all duration-300"
+                className="p-4 bg-green-500 text-white rounded-2xl font-bold hover:bg-green-600 disabled:opacity-50 transition-all duration-300 border-2 border-green-600 soft-hover"
               >
                 {isProcessingReceipt ? (
                   <div className="flex flex-col items-center">
-                    <Loader size={16} className="animate-spin mb-1" />
+                    <Loader size={20} className="animate-spin mb-2" />
                     <span className="text-xs">Processing</span>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center">
-                    <Camera size={16} className="mb-1" />
+                    <Camera size={20} className="mb-2" />
                     <span className="text-xs">Camera</span>
                   </div>
                 )}
@@ -330,10 +340,10 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 type="button"
                 onClick={handleUploadClick}
                 disabled={isListening || isProcessingReceipt}
-                className="px-3 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 transition-all duration-300"
+                className="p-4 bg-orange-500 text-white rounded-2xl font-bold hover:bg-orange-600 disabled:opacity-50 transition-all duration-300 border-2 border-orange-600 soft-hover"
               >
                 <div className="flex flex-col items-center">
-                  <Upload size={16} className="mb-1" />
+                  <Upload size={20} className="mb-2" />
                   <span className="text-xs">Upload</span>
                 </div>
               </button>
@@ -341,12 +351,12 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
           </div>
           
           {/* Help Text */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
-            <p className="text-xs text-blue-600 font-medium mb-1">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-2xl p-4">
+            <p className="text-sm text-blue-700 font-bold mb-2">
               💡 Quick Input Options:
             </p>
-            <div className="text-xs text-blue-600 space-y-1">
-              <div>🎤 <strong>Voice:</strong> "Pizza 200 rupees today"</div>
+            <div className="text-sm text-blue-600 space-y-1 font-medium">
+              <div>🎤 <strong>Voice:</strong> "Pizza 100 rupees 5 quantity June 10"</div>
               <div>📷 <strong>Camera:</strong> Take photo of receipt</div>
               <div>📤 <strong>Upload:</strong> Select receipt from gallery</div>
             </div>
@@ -357,14 +367,14 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-2xl font-bold hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!formData.amount || !formData.description || isSubmitting || isProcessingReceipt}
-              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center"
+              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-2xl font-bold hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center soft-hover"
             >
               {isSubmitting ? (
                 <>
