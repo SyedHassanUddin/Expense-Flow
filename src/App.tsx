@@ -14,6 +14,7 @@ import { Expense, Currency, TimeFilter, ExpenseFormData } from './types/expense'
 import { loadExpenses, saveExpenses, exportToCSV } from './utils/storage';
 import { categorizeExpense } from './utils/categories';
 import { filterExpensesByTime } from './utils/dateFilters';
+import { convertExpenseAmount } from './utils/currencyConverter';
 
 // Main App Component
 const MainApp = () => {
@@ -78,6 +79,16 @@ const MainApp = () => {
     setOcrFormData(data);
   };
 
+  // Handle currency change - convert existing expenses
+  const handleCurrencyChange = async (newCurrency: Currency) => {
+    if (newCurrency === currency) return;
+    
+    setCurrency(newCurrency);
+    
+    // Note: The conversion will be handled by SummaryCards component
+    // We don't need to convert the stored expenses, just display them converted
+  };
+
   // Filter expenses based on time and search
   const filteredExpenses = filterExpensesByTime(expenses, timeFilter);
 
@@ -96,7 +107,7 @@ const MainApp = () => {
         timeFilter={timeFilter}
         onTimeFilterChange={setTimeFilter}
         currency={currency}
-        onCurrencyChange={setCurrency}
+        onCurrencyChange={handleCurrencyChange}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         onExport={handleExport}
