@@ -8,7 +8,6 @@ import SummaryCards from './components/SummaryCards';
 import ExpenseList from './components/ExpenseList';
 import Footer from './components/Footer';
 import BankConnection from './components/BankConnection';
-import ReceiptScanner from './components/ReceiptScanner';
 import FloatingAddButton from './components/FloatingAddButton';
 import AddExpenseModal from './components/modals/AddExpenseModal';
 import EditExpenseModal from './components/modals/EditExpenseModal';
@@ -45,7 +44,7 @@ const MainApp = () => {
     }
   }, [expenses]);
 
-  const handleAddExpense = (formData: ExpenseFormData) => {
+  const handleAddExpense = (formData: ExpenseFormData & { source?: string }) => {
     const newExpense: Expense = {
       id: crypto.randomUUID(),
       amount: parseFloat(formData.amount),
@@ -54,7 +53,7 @@ const MainApp = () => {
       date: formData.date,
       category: categorizeExpense(formData.description),
       currency: currency,
-      source: 'manual'
+      source: formData.source || 'manual'
     };
 
     setExpenses(prev => [newExpense, ...prev]);
@@ -150,10 +149,6 @@ const MainApp = () => {
       <BankConnection 
         onTransactionsImported={handleBankTransactions}
         currency={currency}
-      />
-      
-      <ReceiptScanner 
-        onDataExtracted={handleOCRDataExtracted}
       />
       
       <ExpenseList
