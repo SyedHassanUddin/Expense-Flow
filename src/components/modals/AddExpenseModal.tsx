@@ -78,13 +78,12 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     setIsSubmitting(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 300)); // Simulate processing
+      await new Promise(resolve => setTimeout(resolve, 300));
       onSubmit({
         ...formData,
-        source: initialData?.amount ? 'receipt' : 'manual' // Mark as receipt if came from OCR
+        source: initialData?.amount ? 'receipt' : 'manual'
       } as ExpenseFormData);
       
-      // Reset form
       setFormData({
         amount: '',
         quantity: '1',
@@ -103,19 +102,14 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
 
   const handleVoiceInput = () => {
     if (isListening) {
-      // Stop current recognition
       if (stopRecognitionRef.current) {
         stopRecognitionRef.current();
       }
       return;
     }
     
-    console.log('Starting voice recognition...');
-    
     const stopRecognition = startVoiceRecognition(
       (result: VoiceResult) => {
-        console.log('Voice recognition result:', result);
-        
         setFormData(prev => ({
           ...prev,
           ...(result.amount && { amount: result.amount.toString() }),
@@ -129,18 +123,15 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         stopRecognitionRef.current = null;
       },
       (error: string) => {
-        console.error('Voice recognition error:', error);
         toast.error(error);
         setIsListening(false);
         stopRecognitionRef.current = null;
       },
       () => {
-        console.log('Voice recognition started');
         setIsListening(true);
         toast.success('Listening... Speak now!', { duration: 2000 });
       },
       () => {
-        console.log('Voice recognition ended');
         setIsListening(false);
         stopRecognitionRef.current = null;
       }
@@ -164,7 +155,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     
     try {
       const data = await processReceiptImage(file, (progress) => {
-        // You can add progress updates here if needed
+        // Progress updates
       });
 
       if (data.amount || data.date || data.description) {
@@ -193,14 +184,6 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     }
   };
 
-  const handleCameraCapture = () => {
-    cameraInputRef.current?.click();
-  };
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
   const handleInputChange = (field: keyof ExpenseFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -208,7 +191,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="modal-overlay">
       {/* Hidden file inputs */}
       <input
         ref={fileInputRef}
@@ -226,55 +209,44 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
         className="hidden"
       />
 
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      
-      {/* Modal */}
-      <div className="relative w-full max-w-md notebook-card max-h-[90vh] overflow-y-auto">
+      <div className="modal-content">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b-2 border-gray-100 bg-gradient-to-r from-green-50 to-blue-50">
-          <h2 className="text-xl font-bold text-gray-800">Add New Expense</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-slate-800">Add New Expense</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
           >
-            <X size={20} className="text-gray-500" />
+            <X size={20} className="text-slate-500" />
           </button>
         </div>
         
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Amount and Quantity Row */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Amount and Quantity */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                Amount ({currency})
-              </label>
+            <div className="form-group">
+              <label className="form-label">Amount ({currency})</label>
               <input
                 type="number"
                 step="0.01"
                 min="0"
                 value={formData.amount}
                 onChange={(e) => handleInputChange('amount', e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white font-medium"
+                className="form-input"
                 placeholder="0.00"
                 required
               />
             </div>
             
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                Quantity
-              </label>
+            <div className="form-group">
+              <label className="form-label">Quantity</label>
               <input
                 type="number"
                 min="1"
                 value={formData.quantity}
                 onChange={(e) => handleInputChange('quantity', e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white font-medium"
+                className="form-input"
                 placeholder="1"
                 required
               />
@@ -282,143 +254,135 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
           </div>
           
           {/* Description */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              Description
-            </label>
+          <div className="form-group">
+            <label className="form-label">Description</label>
             <input
               type="text"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white font-medium"
+              className="form-input"
               placeholder="What did you spend on?"
               required
             />
           </div>
           
-          {/* Date with Smart Autofill Badge */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              Smart Date Autofill
-            </label>
+          {/* Date */}
+          <div className="form-group">
+            <label className="form-label">Smart Date Autofill</label>
             <div className="relative">
               <input
                 type="date"
                 value={formData.date}
                 onChange={(e) => handleInputChange('date', e.target.value)}
-                className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white font-medium"
+                className="form-input pl-10"
                 required
               />
-              <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 text-orange-500" size={16} />
+              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-orange-500" size={16} />
             </div>
-            <p className="text-xs text-gray-500 mt-1 font-medium">
+            <p className="text-xs text-slate-500 mt-1">
               Sets today's date automatically on app load
             </p>
           </div>
 
-          {/* Input Methods Row */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-3">
-              Quick Input Methods
-            </label>
+          {/* Quick Input Methods */}
+          <div className="form-group">
+            <label className="form-label">Quick Input Methods</label>
             <div className="grid grid-cols-3 gap-3">
               {/* Voice Input */}
               <button
                 type="button"
                 onClick={handleVoiceInput}
                 disabled={isProcessingReceipt}
-                className={`p-4 rounded-2xl font-bold transition-all duration-300 border-2 ${
+                className={`p-4 rounded-xl font-medium transition-all duration-300 ${
                   isListening
-                    ? 'bg-red-500 text-white animate-pulse border-red-600'
-                    : 'bg-purple-500 text-white hover:bg-purple-600 border-purple-600 soft-hover'
-                } disabled:opacity-50`}
+                    ? 'bg-red-500 text-white animate-pulse'
+                    : 'bg-purple-500 text-white hover:bg-purple-600'
+                } disabled:opacity-50 flex flex-col items-center`}
               >
                 {isListening ? (
-                  <div className="flex flex-col items-center">
+                  <>
                     <div className="flex space-x-1 mb-2">
-                      <div className="voice-wave w-1 h-4 bg-white rounded-full"></div>
-                      <div className="voice-wave w-1 h-3 bg-white rounded-full"></div>
-                      <div className="voice-wave w-1 h-5 bg-white rounded-full"></div>
+                      <div className="w-1 h-4 bg-white rounded-full animate-pulse"></div>
+                      <div className="w-1 h-3 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-1 h-5 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
                     </div>
                     <span className="text-xs">Listening</span>
-                  </div>
+                  </>
                 ) : (
-                  <div className="flex flex-col items-center">
+                  <>
                     <Mic size={20} className="mb-2" />
                     <span className="text-xs">Voice</span>
-                  </div>
+                  </>
                 )}
               </button>
 
-              {/* Camera Capture */}
+              {/* Camera */}
               <button
                 type="button"
-                onClick={handleCameraCapture}
+                onClick={() => cameraInputRef.current?.click()}
                 disabled={isListening || isProcessingReceipt}
-                className="p-4 bg-green-500 text-white rounded-2xl font-bold hover:bg-green-600 disabled:opacity-50 transition-all duration-300 border-2 border-green-600 soft-hover"
+                className="p-4 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 disabled:opacity-50 transition-all duration-300 flex flex-col items-center"
               >
                 {isProcessingReceipt ? (
-                  <div className="flex flex-col items-center">
+                  <>
                     <Loader size={20} className="animate-spin mb-2" />
                     <span className="text-xs">Processing</span>
-                  </div>
+                  </>
                 ) : (
-                  <div className="flex flex-col items-center">
+                  <>
                     <Camera size={20} className="mb-2" />
                     <span className="text-xs">Camera</span>
-                  </div>
+                  </>
                 )}
               </button>
 
-              {/* Upload Receipt */}
+              {/* Upload */}
               <button
                 type="button"
-                onClick={handleUploadClick}
+                onClick={() => fileInputRef.current?.click()}
                 disabled={isListening || isProcessingReceipt}
-                className="p-4 bg-orange-500 text-white rounded-2xl font-bold hover:bg-orange-600 disabled:opacity-50 transition-all duration-300 border-2 border-orange-600 soft-hover"
+                className="p-4 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 disabled:opacity-50 transition-all duration-300 flex flex-col items-center"
               >
-                <div className="flex flex-col items-center">
-                  <Upload size={20} className="mb-2" />
-                  <span className="text-xs">Upload</span>
-                </div>
+                <Upload size={20} className="mb-2" />
+                <span className="text-xs">Upload</span>
               </button>
             </div>
           </div>
           
           {/* Help Text */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-2xl p-4">
-            <p className="text-sm text-blue-700 font-bold mb-2">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <p className="text-sm text-blue-700 font-semibold mb-2">
               💡 Quick Input Options:
             </p>
-            <div className="text-sm text-blue-600 space-y-1 font-medium">
+            <div className="text-sm text-blue-600 space-y-1">
               <div>🎤 <strong>Voice:</strong> "Pizza 100 rupees 5 quantity June 10"</div>
               <div>📷 <strong>Camera:</strong> Take photo of receipt</div>
               <div>📤 <strong>Upload:</strong> Select receipt from gallery</div>
             </div>
           </div>
           
-          {/* Submit Button */}
+          {/* Submit Buttons */}
           <div className="flex gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-2xl font-bold hover:bg-gray-50 transition-colors"
+              className="flex-1 btn-secondary justify-center"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!formData.amount || !formData.description || isSubmitting || isProcessingReceipt}
-              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-2xl font-bold hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center soft-hover"
+              className="flex-1 btn-primary justify-center"
             >
               {isSubmitting ? (
                 <>
-                  <Loader size={16} className="animate-spin mr-2" />
+                  <Loader size={16} className="animate-spin" />
                   Adding...
                 </>
               ) : (
                 <>
-                  <Plus size={16} className="mr-2" />
+                  <Plus size={16} />
                   Add Expense
                 </>
               )}

@@ -3,18 +3,12 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './components/auth/AuthProvider';
 import { Toaster } from 'react-hot-toast';
+import Sidebar from './components/Sidebar';
 import Header from './components/Header';
-import Hero from './components/Hero';
-import FeatureGuide from './components/FeatureGuide';
-import SummaryCards from './components/SummaryCards';
-import ExpenseList from './components/ExpenseList';
-import Footer from './components/Footer';
-import BankConnection from './components/BankConnection';
-import FloatingAddButton from './components/FloatingAddButton';
+import Dashboard from './components/Dashboard';
 import AddExpenseModal from './components/modals/AddExpenseModal';
 import EditExpenseModal from './components/modals/EditExpenseModal';
 import AuthModal from './components/auth/AuthModal';
-import ReminderWidget from './components/ReminderWidget';
 import { Expense, Currency, TimeFilter, ExpenseFormData } from './types/expense';
 import { loadExpenses, saveExpenses, exportToCSV } from './utils/storage';
 import { ExpenseDatabase } from './lib/database';
@@ -31,6 +25,7 @@ const MainApp = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [ocrFormData, setOcrFormData] = useState<Partial<ExpenseFormData>>({});
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -254,67 +249,58 @@ const MainApp = () => {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen pastel-bg flex items-center justify-center">
+      <div className="app-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-emerald-500 mx-auto mb-4"></div>
-          <p className="text-gray-700 font-medium">Loading your expenses...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-slate-600 font-medium">Loading your expenses...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pastel-bg relative overflow-hidden">
-      {/* Floating decorative shapes */}
-      <div className="floating-shape w-16 h-16 bg-pink-200 top-10 left-10"></div>
-      <div className="floating-shape w-20 h-20 bg-yellow-200 top-32 right-20"></div>
-      <div className="floating-shape w-12 h-12 bg-green-200 bottom-20 left-1/4"></div>
-      <div className="floating-shape w-24 h-24 bg-blue-200 top-1/2 right-1/3"></div>
-      <div className="floating-shape w-8 h-8 bg-orange-200 bottom-32 right-10"></div>
-
-      <Header 
-        timeFilter={timeFilter}
-        onTimeFilterChange={setTimeFilter}
-        currency={currency}
-        onCurrencyChange={handleCurrencyChange}
-        onExport={handleExport}
-        onClearAll={handleClearAll}
-        expenseCount={expenses.length}
-        user={user}
-        onAuthRequired={handleAuthRequired}
-      />
-      
-      <Hero />
-      
-      <FeatureGuide />
-      
-      <SummaryCards 
-        expenses={filteredExpenses}
-        currency={currency}
-        timeFilter={timeFilter}
-      />
-      
-      <ReminderWidget onAddExpense={() => setIsAddModalOpen(true)} />
-      
-      <BankConnection 
-        onTransactionsImported={handleBankTransactions}
-        currency={currency}
-      />
-      
-      <ExpenseList
-        expenses={filteredExpenses}
-        currency={currency}
-        onDelete={handleDeleteExpense}
-        onEdit={handleOpenEditModal}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+    <div className="app-bg">
+      <Sidebar 
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
         onAddExpense={() => setIsAddModalOpen(true)}
       />
       
-      <Footer />
+      <div className="main-content">
+        <Header 
+          timeFilter={timeFilter}
+          onTimeFilterChange={setTimeFilter}
+          currency={currency}
+          onCurrencyChange={handleCurrencyChange}
+          onExport={handleExport}
+          onClearAll={handleClearAll}
+          expenseCount={expenses.length}
+          user={user}
+          onAuthRequired={handleAuthRequired}
+          onMenuClick={() => setSidebarOpen(true)}
+        />
+        
+        <Dashboard
+          expenses={filteredExpenses}
+          currency={currency}
+          timeFilter={timeFilter}
+          onDelete={handleDeleteExpense}
+          onEdit={handleOpenEditModal}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          onAddExpense={() => setIsAddModalOpen(true)}
+          onBankTransactions={handleBankTransactions}
+        />
+      </div>
       
       {/* Floating Add Button */}
-      <FloatingAddButton onClick={() => setIsAddModalOpen(true)} />
+      <button 
+        className="floating-add"
+        onClick={() => setIsAddModalOpen(true)}
+        aria-label="Add new expense"
+      >
+        +
+      </button>
       
       {/* Modals */}
       <AddExpenseModal
@@ -361,13 +347,12 @@ function App() {
           toastOptions={{
             duration: 4000,
             style: {
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)',
-              border: '2px solid rgba(16, 185, 129, 0.2)',
-              borderRadius: '16px',
-              color: '#374151',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-              fontFamily: 'Poppins, sans-serif',
+              background: '#FFFFFF',
+              border: '1px solid #E2E8F0',
+              borderRadius: '12px',
+              color: '#1E293B',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+              fontFamily: 'Plus Jakarta Sans, sans-serif',
               fontWeight: '500',
             },
             success: {
