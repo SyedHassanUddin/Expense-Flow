@@ -1,8 +1,29 @@
 {
-  "name": "vite-react-typescript-starter",
-  "private": true,
-  "version": "0.0.0",
+  "name": "expenseflow",
+  "private": false,
+  "version": "1.0.0",
+  "description": "Smart expense tracking with voice commands, receipt scanning, and cloud sync",
   "type": "module",
+  "keywords": [
+    "expense-tracker",
+    "voice-recognition",
+    "receipt-scanning",
+    "personal-finance",
+    "react",
+    "typescript",
+    "supabase",
+    "tailwindcss"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/yourusername/expenseflow#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/expenseflow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/expenseflow/issues"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
