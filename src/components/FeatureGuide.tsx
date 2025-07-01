@@ -9,7 +9,7 @@ import {
 
 const FeatureGuide: React.FC = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false); // Changed to false by default
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -160,13 +160,18 @@ const FeatureGuide: React.FC = () => {
   if (!isVisible) {
     return (
       <div className="max-w-6xl mx-auto px-4 mb-6">
-        <button
-          onClick={() => setIsVisible(true)}
-          className="glass-card dark:glass-card-dark px-4 py-2 rounded-xl text-white/80 hover:text-white transition-colors"
-        >
-          <Eye size={16} className="inline mr-2" />
-          Show User Guide
-        </button>
+        <div className="text-center">
+          <button
+            onClick={() => setIsVisible(true)}
+            className="glass-card dark:glass-card-dark px-6 py-3 rounded-xl text-white/80 hover:text-white transition-all duration-300 hover:scale-105 group"
+          >
+            <div className="flex items-center space-x-2">
+              <Eye size={20} className="group-hover:scale-110 transition-transform" />
+              <span className="font-medium">📚 Show Complete User Guide</span>
+            </div>
+            <p className="text-sm text-white/60 mt-1">Learn all features and tips</p>
+          </button>
+        </div>
       </div>
     );
   }
