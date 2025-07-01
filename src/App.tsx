@@ -16,6 +16,7 @@ import AuthModal from './components/auth/AuthModal';
 import ReminderWidget from './components/ReminderWidget';
 import FeatureGuide from './components/FeatureGuide';
 import Footer from './components/Footer';
+import ConnectionStatus from './components/ConnectionStatus';
 import { Expense, Currency, TimeFilter, ExpenseFormData } from './types/expense';
 import { loadExpenses, saveExpenses, exportToCSV } from './utils/storage';
 import { ExpenseDatabase } from './lib/database';
@@ -32,12 +33,30 @@ const MainApp = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [ocrFormData, setOcrFormData] = useState<Partial<ExpenseFormData>>({});
   const [loading, setLoading] = useState(true);
+  const [showAddAnimation, setShowAddAnimation] = useState(false);
   
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+
+  // Show add button animation for new users
+  useEffect(() => {
+    const hasSeenAnimation = localStorage.getItem('expenseflow-seen-add-animation');
+    if (!hasSeenAnimation && expenses.length === 0) {
+      const timer = setTimeout(() => {
+        setShowAddAnimation(true);
+        // Hide animation after 5 seconds
+        setTimeout(() => {
+          setShowAddAnimation(false);
+          localStorage.setItem('expenseflow-seen-add-animation', 'true');
+        }, 5000);
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [expenses.length]);
 
   // Load expenses on mount and when user changes
   useEffect(() => {
@@ -250,6 +269,11 @@ const MainApp = () => {
     setIsAuthModalOpen(true);
   };
 
+  const handleOpenAddModal = () => {
+    setIsAddModalOpen(true);
+    setShowAddAnimation(false); // Hide animation when user clicks
+  };
+
   // Filter expenses based on time and search
   const filteredExpenses = filterExpensesByTime(expenses, timeFilter);
 
@@ -273,6 +297,9 @@ const MainApp = () => {
       <div className="particle w-5 h-5 bg-white/10 top-1/2 right-1/3"></div>
       <div className="particle w-2 h-2 bg-white/20 bottom-32 right-10"></div>
 
+      {/* Connection Status */}
+      <ConnectionStatus />
+
       <Header 
         user={user}
         onAuthRequired={handleAuthRequired}
@@ -286,12 +313,7 @@ const MainApp = () => {
         timeFilter={timeFilter}
       />
       
-      <ReminderWidget onAddExpense={() => setIsAddModalOpen(true)} />
-      
-      <BankConnection 
-        onTransactionsImported={handleBankTransactions}
-        currency={currency}
-      />
+      <ReminderWidget onAddExpense={handleOpenAddModal} />
       
       <ExpenseList
         expenses={filteredExpenses}
@@ -300,7 +322,12 @@ const MainApp = () => {
         onEdit={handleOpenEditModal}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        onAddExpense={() => setIsAddModalOpen(true)}
+        onAddExpense={handleOpenAddModal}
+      />
+      
+      <BankConnection 
+        onTransactionsImported={handleBankTransactions}
+        currency={currency}
       />
       
       {/* Feature Guide moved to end before footer */}
@@ -309,7 +336,10 @@ const MainApp = () => {
       <Footer />
       
       {/* Floating Controls */}
-      <FloatingAddButton onClick={() => setIsAddModalOpen(true)} />
+      <FloatingAddButton 
+        onClick={handleOpenAddModal}
+        showAnimation={showAddAnimation}
+      />
       
       <FloatingMiniNavbar
         timeFilter={timeFilter}
