@@ -3,30 +3,14 @@ import { TrendingUp, Moon, Sun, LogOut, User } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from './auth/AuthProvider';
 import { Switch } from './ui/switch';
-import SettingsDropdown from './SettingsDropdown';
-import { Currency, TimeFilter } from '../types/expense';
 import toast from 'react-hot-toast';
 
 interface HeaderProps {
-  timeFilter: TimeFilter;
-  onTimeFilterChange: (filter: TimeFilter) => void;
-  currency: Currency;
-  onCurrencyChange: (currency: Currency) => void;
-  onExport: () => void;
-  onClearAll: () => void;
-  expenseCount: number;
   user: any;
   onAuthRequired: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
-  timeFilter,
-  onTimeFilterChange,
-  currency,
-  onCurrencyChange,
-  onExport,
-  onClearAll,
-  expenseCount,
   user,
   onAuthRequired
 }) => {
@@ -94,17 +78,6 @@ const Header: React.FC<HeaderProps> = ({
                 />
                 <Moon size={16} className="text-slate-700 dark:text-slate-300" />
               </div>
-
-              {/* Settings Dropdown */}
-              <SettingsDropdown
-                timeFilter={timeFilter}
-                onTimeFilterChange={onTimeFilterChange}
-                currency={currency}
-                onCurrencyChange={onCurrencyChange}
-                onExport={onExport}
-                onClearAll={onClearAll}
-                expenseCount={expenseCount}
-              />
             </div>
           </div>
         </div>

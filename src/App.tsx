@@ -5,16 +5,17 @@ import { AuthProvider, useAuth } from './components/auth/AuthProvider';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
 import Hero from './components/Hero';
-import FeatureGuide from './components/FeatureGuide';
 import SummaryCards from './components/SummaryCards';
 import ExpenseList from './components/ExpenseList';
-import Footer from './components/Footer';
 import BankConnection from './components/BankConnection';
 import FloatingAddButton from './components/FloatingAddButton';
+import FloatingMiniNavbar from './components/FloatingMiniNavbar';
 import AddExpenseModal from './components/modals/AddExpenseModal';
 import EditExpenseModal from './components/modals/EditExpenseModal';
 import AuthModal from './components/auth/AuthModal';
 import ReminderWidget from './components/ReminderWidget';
+import FeatureGuide from './components/FeatureGuide';
+import Footer from './components/Footer';
 import { Expense, Currency, TimeFilter, ExpenseFormData } from './types/expense';
 import { loadExpenses, saveExpenses, exportToCSV } from './utils/storage';
 import { ExpenseDatabase } from './lib/database';
@@ -273,20 +274,11 @@ const MainApp = () => {
       <div className="particle w-2 h-2 bg-white/20 bottom-32 right-10"></div>
 
       <Header 
-        timeFilter={timeFilter}
-        onTimeFilterChange={setTimeFilter}
-        currency={currency}
-        onCurrencyChange={handleCurrencyChange}
-        onExport={handleExport}
-        onClearAll={handleClearAll}
-        expenseCount={expenses.length}
         user={user}
         onAuthRequired={handleAuthRequired}
       />
       
       <Hero />
-      
-      <FeatureGuide />
       
       <SummaryCards 
         expenses={filteredExpenses}
@@ -311,10 +303,23 @@ const MainApp = () => {
         onAddExpense={() => setIsAddModalOpen(true)}
       />
       
+      {/* Feature Guide moved to end before footer */}
+      <FeatureGuide />
+      
       <Footer />
       
-      {/* Floating Add Button */}
+      {/* Floating Controls */}
       <FloatingAddButton onClick={() => setIsAddModalOpen(true)} />
+      
+      <FloatingMiniNavbar
+        timeFilter={timeFilter}
+        onTimeFilterChange={setTimeFilter}
+        currency={currency}
+        onCurrencyChange={handleCurrencyChange}
+        onExport={handleExport}
+        onClearAll={handleClearAll}
+        expenseCount={expenses.length}
+      />
       
       {/* Modals */}
       <AddExpenseModal
