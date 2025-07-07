@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
-import { TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3, Calendar, Target, AlertTriangle, Plus, Eye, ArrowUpRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, Calendar, Target, AlertTriangle, Plus, Eye, ArrowUpRight } from 'lucide-react';
 import { Expense, Currency } from '../types/expense';
 import { Income } from '../types/income';
 import { BudgetStatus } from '../types/budget';
@@ -41,7 +41,6 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
   onViewBudgetDetails
 }) => {
   const [chartData, setChartData] = useState<any>(null);
-  const [categoryData, setCategoryData] = useState<any>(null);
 
   // Filter data for selected month
   const monthExpenses = expenses.filter(expense => 
@@ -82,32 +81,6 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
     };
 
     setChartData(barData);
-
-    // Category Breakdown Pie Chart
-    const categoryTotals = monthExpenses.reduce((acc, expense) => {
-      acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const categoryColors = [
-      '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', 
-      '#DDA0DD', '#98D8C8', '#F39C12', '#E74C3C', '#9B59B6'
-    ];
-
-    const pieData = {
-      labels: Object.keys(categoryTotals),
-      datasets: [{
-        data: Object.values(categoryTotals),
-        backgroundColor: Object.keys(categoryTotals).map((_, index) => 
-          categoryColors[index % categoryColors.length]
-        ),
-        borderWidth: 0,
-        hoverBorderWidth: 3,
-        hoverBorderColor: 'rgba(255, 255, 255, 0.8)'
-      }]
-    };
-
-    setCategoryData(pieData);
   }, [monthExpenses, monthIncome, totalIncome, totalExpenses, netSavings]);
 
   const chartOptions = {
@@ -149,31 +122,6 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
         },
         ticks: {
           color: 'rgba(255, 255, 255, 0.7)'
-        }
-      }
-    }
-  };
-
-  const pieOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: 'white',
-        bodyColor: 'white',
-        borderColor: 'rgba(255, 255, 255, 0.2)',
-        borderWidth: 1,
-        callbacks: {
-          label: (context: any) => {
-            const label = context.label || '';
-            const value = formatCurrencyAmount(context.raw, currency);
-            const percentage = ((context.raw / totalExpenses) * 100).toFixed(1);
-            return `${label}: ${value} (${percentage}%)`;
-          }
         }
       }
     }
@@ -261,20 +209,20 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
       {/* Interactive Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
         {/* Total Income Card */}
-        <GlassCard className="p-4 sm:p-6 hover:scale-105 transition-all duration-300 glow-green cursor-pointer group">
+        <GlassCard className="p-4 sm:p-6 hover:scale-105 transition-all duration-150 glow-green cursor-pointer group">
           <div className="flex items-center justify-between mb-4">
             <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-full p-3">
-              <TrendingUp size={20} sm:size={24} className="text-white" />
+              <TrendingUp size={20} className="text-white" />
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-xs text-white/70 bg-green-500/20 px-2 py-1 rounded-full">
                 Income
               </span>
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex space-x-1">
                 {onAddIncome && (
                   <button
                     onClick={onAddIncome}
-                    className="p-1 bg-green-500/20 hover:bg-green-500/30 rounded-full transition-colors"
+                    className="p-1 bg-green-500/20 hover:bg-green-500/30 rounded-full transition-colors duration-150"
                     title="Add Income"
                   >
                     <Plus size={14} className="text-green-300" />
@@ -283,7 +231,7 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
                 {onViewIncomeDetails && (
                   <button
                     onClick={onViewIncomeDetails}
-                    className="p-1 bg-green-500/20 hover:bg-green-500/30 rounded-full transition-colors"
+                    className="p-1 bg-green-500/20 hover:bg-green-500/30 rounded-full transition-colors duration-150"
                     title="View Details"
                   >
                     <Eye size={14} className="text-green-300" />
@@ -300,13 +248,13 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
               {monthIncome.length} source{monthIncome.length !== 1 ? 's' : ''}
             </p>
             {totalIncome > 0 && (
-              <ArrowUpRight size={16} className="text-green-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ArrowUpRight size={16} className="text-green-400 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
             )}
           </div>
           {totalIncome === 0 && onAddIncome && (
             <button
               onClick={onAddIncome}
-              className="w-full mt-3 py-2 bg-green-500/20 hover:bg-green-500/30 rounded-lg text-green-300 text-sm font-medium transition-colors"
+              className="w-full mt-3 py-2 bg-green-500/20 hover:bg-green-500/30 rounded-lg text-green-300 text-sm font-medium transition-colors duration-150"
             >
               Add First Income
             </button>
@@ -314,20 +262,20 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
         </GlassCard>
 
         {/* Total Expenses Card */}
-        <GlassCard className="p-4 sm:p-6 hover:scale-105 transition-all duration-300 glow-red cursor-pointer group">
+        <GlassCard className="p-4 sm:p-6 hover:scale-105 transition-all duration-150 glow-red cursor-pointer group">
           <div className="flex items-center justify-between mb-4">
             <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-full p-3">
-              <TrendingDown size={20} sm:size={24} className="text-white" />
+              <TrendingDown size={20} className="text-white" />
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-xs text-white/70 bg-red-500/20 px-2 py-1 rounded-full">
                 Expenses
               </span>
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex space-x-1">
                 {onAddExpense && (
                   <button
                     onClick={onAddExpense}
-                    className="p-1 bg-red-500/20 hover:bg-red-500/30 rounded-full transition-colors"
+                    className="p-1 bg-red-500/20 hover:bg-red-500/30 rounded-full transition-colors duration-150"
                     title="Add Expense"
                   >
                     <Plus size={14} className="text-red-300" />
@@ -336,7 +284,7 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
                 {onViewExpenseDetails && (
                   <button
                     onClick={onViewExpenseDetails}
-                    className="p-1 bg-red-500/20 hover:bg-red-500/30 rounded-full transition-colors"
+                    className="p-1 bg-red-500/20 hover:bg-red-500/30 rounded-full transition-colors duration-150"
                     title="View Details"
                   >
                     <Eye size={14} className="text-red-300" />
@@ -353,13 +301,13 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
               {monthExpenses.length} transaction{monthExpenses.length !== 1 ? 's' : ''}
             </p>
             {totalExpenses > 0 && (
-              <ArrowUpRight size={16} className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ArrowUpRight size={16} className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
             )}
           </div>
           {totalExpenses === 0 && onAddExpense && (
             <button
               onClick={onAddExpense}
-              className="w-full mt-3 py-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-300 text-sm font-medium transition-colors"
+              className="w-full mt-3 py-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-300 text-sm font-medium transition-colors duration-150"
             >
               Add First Expense
             </button>
@@ -367,17 +315,17 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
         </GlassCard>
 
         {/* Net Savings Card */}
-        <GlassCard className={`p-4 sm:p-6 hover:scale-105 transition-all duration-300 cursor-pointer group ${netSavings >= 0 ? 'glow-blue' : 'glow-red'}`}>
+        <GlassCard className={`p-4 sm:p-6 hover:scale-105 transition-all duration-150 cursor-pointer group ${netSavings >= 0 ? 'glow-blue' : 'glow-red'}`}>
           <div className="flex items-center justify-between mb-4">
             <div className={`bg-gradient-to-r ${netSavings >= 0 ? 'from-blue-500 to-blue-600' : 'from-red-500 to-red-600'} rounded-full p-3`}>
-              <DollarSign size={20} sm:size={24} className="text-white" />
+              <DollarSign size={20} className="text-white" />
             </div>
             <div className="flex items-center space-x-2">
               <span className={`text-xs text-white/70 ${netSavings >= 0 ? 'bg-blue-500/20' : 'bg-red-500/20'} px-2 py-1 rounded-full`}>
                 {netSavings >= 0 ? 'Savings' : 'Deficit'}
               </span>
               {(totalIncome > 0 || totalExpenses > 0) && (
-                <ArrowUpRight size={16} className={`${netSavings >= 0 ? 'text-blue-400' : 'text-red-400'} opacity-0 group-hover:opacity-100 transition-opacity`} />
+                <ArrowUpRight size={16} className={`${netSavings >= 0 ? 'text-blue-400' : 'text-red-400'} opacity-0 group-hover:opacity-100 transition-opacity duration-150`} />
               )}
             </div>
           </div>
@@ -402,20 +350,20 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
         </GlassCard>
 
         {/* Budget Status Card */}
-        <GlassCard className="p-4 sm:p-6 hover:scale-105 transition-all duration-300 glow-purple cursor-pointer group">
+        <GlassCard className="p-4 sm:p-6 hover:scale-105 transition-all duration-150 glow-purple cursor-pointer group">
           <div className="flex items-center justify-between mb-4">
             <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-full p-3">
-              <Target size={20} sm:size={24} className="text-white" />
+              <Target size={20} className="text-white" />
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-xs text-white/70 bg-purple-500/20 px-2 py-1 rounded-full">
                 Budgets
               </span>
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex space-x-1">
                 {onAddBudget && (
                   <button
                     onClick={onAddBudget}
-                    className="p-1 bg-purple-500/20 hover:bg-purple-500/30 rounded-full transition-colors"
+                    className="p-1 bg-purple-500/20 hover:bg-purple-500/30 rounded-full transition-colors duration-150"
                     title="Add Budget"
                   >
                     <Plus size={14} className="text-purple-300" />
@@ -424,7 +372,7 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
                 {onViewBudgetDetails && (
                   <button
                     onClick={onViewBudgetDetails}
-                    className="p-1 bg-purple-500/20 hover:bg-purple-500/30 rounded-full transition-colors"
+                    className="p-1 bg-purple-500/20 hover:bg-purple-500/30 rounded-full transition-colors duration-150"
                     title="View Details"
                   >
                     <Eye size={14} className="text-purple-300" />
@@ -441,13 +389,13 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
               {criticalBudgets.length} over, {warningBudgets.length} warning
             </p>
             {budgetStatuses.length > 0 && (
-              <ArrowUpRight size={16} className="text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ArrowUpRight size={16} className="text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
             )}
           </div>
           {budgetStatuses.length === 0 && onAddBudget && (
             <button
               onClick={onAddBudget}
-              className="w-full mt-3 py-2 bg-purple-500/20 hover:bg-purple-500/30 rounded-lg text-purple-300 text-sm font-medium transition-colors"
+              className="w-full mt-3 py-2 bg-purple-500/20 hover:bg-purple-500/30 rounded-lg text-purple-300 text-sm font-medium transition-colors duration-150"
             >
               Set First Budget
             </button>
@@ -456,9 +404,9 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+      <div className="grid grid-cols-1 gap-6 sm:gap-8">
         {/* Income vs Expenses Bar Chart */}
-        <GlassCard className="p-4 sm:p-6 hover:scale-105 transition-all duration-300">
+        <GlassCard className="p-4 sm:p-6 hover:scale-105 transition-all duration-150">
           <div className="flex items-center mb-6">
             <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-full p-3 mr-4">
               <BarChart3 size={20} sm:size={24} className="text-white" />
@@ -475,70 +423,6 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
               {formatMonth(selectedMonth)}
             </p>
           </div>
-        </GlassCard>
-
-        {/* Category Breakdown Pie Chart */}
-        <GlassCard className="p-4 sm:p-6 hover:scale-105 transition-all duration-300">
-          <div className="flex items-center mb-6">
-            <div className="bg-gradient-to-r from-orange-500 to-pink-600 rounded-full p-3 mr-4">
-              <PieChart size={20} sm:size={24} className="text-white" />
-            </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-white">Expense Categories</h3>
-          </div>
-          
-          <div className="h-48 sm:h-64">
-            {categoryData && totalExpenses > 0 ? (
-              <Doughnut data={categoryData} options={pieOptions} />
-            ) : (
-              <div className="h-full flex items-center justify-center text-white/60">
-                <div className="text-center">
-                  <PieChart size={48} className="mx-auto mb-2 opacity-50" />
-                  <p>No expenses for this month</p>
-                  {onAddExpense && (
-                    <button
-                      onClick={onAddExpense}
-                      className="mt-3 px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 rounded-lg text-orange-300 text-sm font-medium transition-colors"
-                    >
-                      Add First Expense
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-          
-          {categoryData && totalExpenses > 0 && (
-            <div className="mt-4 space-y-2 max-h-32 overflow-y-auto">
-              {Object.entries(categoryData.labels.reduce((acc: any, label: string, index: number) => {
-                acc[label] = categoryData.datasets[0].data[index];
-                return acc;
-              }, {}))
-                .sort(([,a], [,b]) => (b as number) - (a as number))
-                .slice(0, 5)
-                .map(([category, amount], index) => {
-                  const percentage = ((amount as number / totalExpenses) * 100).toFixed(1);
-                  return (
-                    <div key={category} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center">
-                        <div 
-                          className="w-3 h-3 rounded-full mr-2"
-                          style={{ backgroundColor: categoryData.datasets[0].backgroundColor[categoryData.labels.indexOf(category)] }}
-                        ></div>
-                        <span className="text-white/80">{category}</span>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-white font-semibold">
-                          {formatCurrencyAmount(amount as number, currency)}
-                        </div>
-                        <div className="text-white/60 text-xs">
-                          {percentage}%
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          )}
         </GlassCard>
       </div>
     </div>

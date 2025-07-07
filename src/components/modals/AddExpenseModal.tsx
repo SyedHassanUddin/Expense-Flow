@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Plus, Mic, Camera, Loader, Upload, AlertTriangle, Volume2, Tag, Check, ChevronDown } from 'lucide-react';
+import { X, Plus, Mic, Camera, Loader, Upload, AlertTriangle, Volume2, Tag, Check, ChevronDown, Calendar } from 'lucide-react';
 import { ExpenseFormData, Currency } from '../../types/expense';
 import { startVoiceRecognition, VoiceResult } from '../../utils/voiceRecognition';
 import { processReceiptImage, ReceiptData } from '../../utils/receiptOCR';
@@ -33,6 +33,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
   const [newCategoryInput, setNewCategoryInput] = useState('');
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
+  const [useCustomDate, setUseCustomDate] = useState(false);
   
   const [isListening, setIsListening] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,6 +74,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
       setShowCategoryDropdown(false);
       setShowNewCategoryInput(false);
       setNewCategoryInput('');
+      setUseCustomDate(false);
     }
   }, [isOpen, initialData]);
 
@@ -112,7 +114,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     setIsSubmitting(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 300)); // Simulate processing
+      await new Promise(resolve => setTimeout(resolve, 200)); // Faster processing
       onSubmit({
         ...formData,
         category: selectedCategory || categorizeExpense(formData.description),
@@ -204,7 +206,6 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     
     try {
       const data = await processReceiptImage(file, (progress) => {
-        // You can add progress updates here if needed
         console.log('OCR Progress:', progress);
       });
 
@@ -236,7 +237,6 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     if (file) {
       handleReceiptScan(file);
     }
-    // Reset input value to allow selecting the same file again
     event.target.value = '';
   };
 
@@ -290,6 +290,13 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
     }
   };
 
+  const setQuickDate = (days: number) => {
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    setFormData(prev => ({ ...prev, date: date.toISOString().split('T')[0] }));
+    setUseCustomDate(false);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -324,7 +331,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
           <h2 className="text-xl font-bold text-gray-800">Add New Expense</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-150"
           >
             <X size={20} className="text-gray-500" />
           </button>
@@ -344,7 +351,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 min="0"
                 value={formData.amount}
                 onChange={(e) => handleInputChange('amount', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 placeholder-gray-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 bg-white text-gray-900 placeholder-gray-500"
                 placeholder="0.00"
                 required
               />
@@ -359,7 +366,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 min="1"
                 value={formData.quantity}
                 onChange={(e) => handleInputChange('quantity', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 placeholder-gray-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 bg-white text-gray-900 placeholder-gray-500"
                 placeholder="1"
                 required
               />
@@ -375,7 +382,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
               type="text"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 placeholder-gray-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 bg-white text-gray-900 placeholder-gray-500"
               placeholder="What did you spend on?"
               required
             />
@@ -390,7 +397,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
               <button
                 type="button"
                 onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 text-left flex items-center justify-between"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 bg-white text-gray-900 text-left flex items-center justify-between"
               >
                 <div className="flex items-center">
                   {selectedCategory && (
@@ -403,7 +410,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                     {selectedCategory || 'Select category...'}
                   </span>
                 </div>
-                <ChevronDown size={16} className={`text-gray-400 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+                <ChevronDown size={16} className={`text-gray-400 transition-transform duration-150 ${showCategoryDropdown ? 'rotate-180' : ''}`} />
               </button>
 
               {showCategoryDropdown && (
@@ -413,7 +420,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                       key={category}
                       type="button"
                       onClick={() => handleCategorySelect(category)}
-                      className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center transition-colors"
+                      className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center transition-colors duration-150"
                     >
                       <div
                         className="w-3 h-3 rounded-full mr-3"
@@ -432,7 +439,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setShowNewCategoryInput(true)}
-                        className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center text-blue-600 transition-colors"
+                        className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center text-blue-600 transition-colors duration-150"
                       >
                         <Plus size={16} className="mr-3" />
                         <span>Add new category</span>
@@ -453,7 +460,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                           <button
                             type="button"
                             onClick={handleAddNewCategory}
-                            className="flex-1 bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600 transition-colors"
+                            className="flex-1 bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600 transition-colors duration-150"
                           >
                             Add
                           </button>
@@ -463,7 +470,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                               setShowNewCategoryInput(false);
                               setNewCategoryInput('');
                             }}
-                            className="flex-1 bg-gray-200 text-gray-700 px-3 py-1 rounded-lg text-sm hover:bg-gray-300 transition-colors"
+                            className="flex-1 bg-gray-200 text-gray-700 px-3 py-1 rounded-lg text-sm hover:bg-gray-300 transition-colors duration-150"
                           >
                             Cancel
                           </button>
@@ -476,18 +483,62 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
             </div>
           </div>
           
-          {/* Date */}
+          {/* Date Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Date
             </label>
-            <input
-              type="date"
-              value={formData.date}
-              onChange={(e) => handleInputChange('date', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900"
-              required
-            />
+            
+            {!useCustomDate ? (
+              <div className="space-y-2">
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setQuickDate(0)}
+                    className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors duration-150"
+                  >
+                    Today
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQuickDate(-1)}
+                    className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors duration-150"
+                  >
+                    Yesterday
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUseCustomDate(true)}
+                    className="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-200 transition-colors duration-150 flex items-center justify-center"
+                  >
+                    <Calendar size={14} className="mr-1" />
+                    Custom
+                  </button>
+                </div>
+                <div className="text-center">
+                  <span className="text-sm text-gray-600">
+                    Selected: {new Date(formData.date).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <input
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => handleInputChange('date', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 bg-white text-gray-900"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setUseCustomDate(false)}
+                  className="text-sm text-blue-600 hover:text-blue-700 transition-colors duration-150"
+                >
+                  ← Back to quick select
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Voice Recognition Display */}
@@ -528,7 +579,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 type="button"
                 onClick={handleVoiceInput}
                 disabled={isListening || isProcessingReceipt}
-                className={`px-3 py-3 rounded-xl font-medium transition-all duration-300 ${
+                className={`px-3 py-3 rounded-xl font-medium transition-all duration-150 ${
                   isListening
                     ? 'bg-red-500 text-white animate-pulse'
                     : 'bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700'
@@ -552,7 +603,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 type="button"
                 onClick={handleCameraCapture}
                 disabled={isListening || isProcessingReceipt}
-                className="px-3 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-medium hover:from-green-600 hover:to-green-700 disabled:opacity-50 transition-all duration-300"
+                className="px-3 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-medium hover:from-green-600 hover:to-green-700 disabled:opacity-50 transition-all duration-150"
               >
                 {isProcessingReceipt ? (
                   <div className="flex flex-col items-center">
@@ -572,7 +623,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
                 type="button"
                 onClick={handleUploadClick}
                 disabled={isListening || isProcessingReceipt}
-                className="px-3 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 transition-all duration-300"
+                className="px-3 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-medium hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 transition-all duration-150"
               >
                 <div className="flex flex-col items-center">
                   <Upload size={16} className="mb-1" />
@@ -616,7 +667,7 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
               <div>🎤 <strong>Voice:</strong> "Pizza 200 rupees today"</div>
               <div>📷 <strong>Camera:</strong> Take photo of receipt</div>
               <div>📤 <strong>Upload:</strong> Select receipt from gallery</div>
-              <div>🏷️ <strong>Category:</strong> Auto-detected or select/create custom</div>
+              <div>📅 <strong>Date:</strong> Quick select or custom date picker</div>
             </div>
           </div>
           
@@ -625,14 +676,14 @@ const AddExpenseModal: React.FC<AddExpenseModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors duration-150"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!formData.amount || !formData.description || isSubmitting || isProcessingReceipt}
-              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center"
+              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 flex items-center justify-center"
             >
               {isSubmitting ? (
                 <>

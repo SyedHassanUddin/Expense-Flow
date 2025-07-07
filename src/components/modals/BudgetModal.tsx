@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Loader, Target, Calendar, ChevronDown, Check } from 'lucide-react';
+import { X, Save, Loader, Target, Calendar, ChevronDown, Check, Plus } from 'lucide-react';
 import { BudgetFormData, Currency } from '../../types/budget';
 import { getAllCategories, getCategoryColor } from '../../utils/categories';
 import { getMonthOptions } from '../../utils/budgetUtils';
@@ -30,10 +30,12 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
   const [categories, setCategories] = useState<string[]>([]);
   const [monthOptions, setMonthOptions] = useState<{ value: string; label: string }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [budgetType, setBudgetType] = useState<'specific' | 'total'>('specific');
 
   // Load categories and month options on mount
   useEffect(() => {
-    setCategories(getAllCategories());
+    const allCategories = getAllCategories();
+    setCategories(['Total Budget', ...allCategories]);
     setMonthOptions(getMonthOptions());
   }, []);
 
@@ -45,6 +47,7 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
         amount: initialData?.amount || '',
         month: initialData?.month || new Date().toISOString().substring(0, 7)
       });
+      setBudgetType(initialData?.category === 'Total Budget' ? 'total' : 'specific');
       setShowCategoryDropdown(false);
     }
   }, [isOpen, initialData]);
@@ -72,7 +75,7 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
     setIsSubmitting(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 300)); // Simulate processing
+      await new Promise(resolve => setTimeout(resolve, 200)); // Faster processing
       onSubmit(formData);
       
       // Reset form
@@ -81,6 +84,7 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
         amount: '',
         month: new Date().toISOString().substring(0, 7)
       });
+      setBudgetType('specific');
       
       toast.success('Budget set successfully! 🎯');
       onClose();
@@ -97,7 +101,17 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
 
   const handleCategorySelect = (category: string) => {
     setFormData(prev => ({ ...prev, category }));
+    setBudgetType(category === 'Total Budget' ? 'total' : 'specific');
     setShowCategoryDropdown(false);
+  };
+
+  const handleBudgetTypeChange = (type: 'specific' | 'total') => {
+    setBudgetType(type);
+    if (type === 'total') {
+      setFormData(prev => ({ ...prev, category: 'Total Budget' }));
+    } else {
+      setFormData(prev => ({ ...prev, category: '' }));
+    }
   };
 
   if (!isOpen) return null;
@@ -117,7 +131,7 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
           <h2 className="text-xl font-bold text-gray-800">Set Budget</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-150"
           >
             <X size={20} className="text-gray-500" />
           </button>
@@ -125,54 +139,87 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
         
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Category Selection */}
+          {/* Budget Type Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Category
+              Budget Type
             </label>
-            <div className="relative">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 text-left flex items-center justify-between"
+                onClick={() => handleBudgetTypeChange('specific')}
+                className={`px-4 py-3 rounded-xl font-medium transition-all duration-150 ${
+                  budgetType === 'specific'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
               >
-                <div className="flex items-center">
-                  {formData.category && (
-                    <div
-                      className="w-3 h-3 rounded-full mr-2"
-                      style={{ backgroundColor: getCategoryColor(formData.category) }}
-                    ></div>
-                  )}
-                  <span className={formData.category ? 'text-gray-900' : 'text-gray-500'}>
-                    {formData.category || 'Select category...'}
-                  </span>
-                </div>
-                <ChevronDown size={16} className={`text-gray-400 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+                Category Budget
               </button>
-
-              {showCategoryDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto">
-                  {categories.map((category) => (
-                    <button
-                      key={category}
-                      type="button"
-                      onClick={() => handleCategorySelect(category)}
-                      className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center transition-colors"
-                    >
-                      <div
-                        className="w-3 h-3 rounded-full mr-3"
-                        style={{ backgroundColor: getCategoryColor(category) }}
-                      ></div>
-                      <span className="text-gray-900">{category}</span>
-                      {formData.category === category && (
-                        <Check size={16} className="text-blue-500 ml-auto" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={() => handleBudgetTypeChange('total')}
+                className={`px-4 py-3 rounded-xl font-medium transition-all duration-150 ${
+                  budgetType === 'total'
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Total Budget
+              </button>
             </div>
           </div>
+
+          {/* Category Selection */}
+          {budgetType === 'specific' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category
+              </label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 bg-white text-gray-900 text-left flex items-center justify-between"
+                >
+                  <div className="flex items-center">
+                    {formData.category && formData.category !== 'Total Budget' && (
+                      <div
+                        className="w-3 h-3 rounded-full mr-2"
+                        style={{ backgroundColor: getCategoryColor(formData.category) }}
+                      ></div>
+                    )}
+                    <span className={formData.category ? 'text-gray-900' : 'text-gray-500'}>
+                      {formData.category || 'Select category...'}
+                    </span>
+                  </div>
+                  <ChevronDown size={16} className={`text-gray-400 transition-transform duration-150 ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showCategoryDropdown && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto">
+                    {categories.filter(cat => cat !== 'Total Budget').map((category) => (
+                      <button
+                        key={category}
+                        type="button"
+                        onClick={() => handleCategorySelect(category)}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center transition-colors duration-150"
+                      >
+                        <div
+                          className="w-3 h-3 rounded-full mr-3"
+                          style={{ backgroundColor: getCategoryColor(category) }}
+                        ></div>
+                        <span className="text-gray-900">{category}</span>
+                        {formData.category === category && (
+                          <Check size={16} className="text-blue-500 ml-auto" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Amount */}
           <div>
@@ -187,7 +234,7 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
                 min="0"
                 value={formData.amount}
                 onChange={(e) => handleInputChange('amount', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900 placeholder-gray-500"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 bg-white text-gray-900 placeholder-gray-500"
                 placeholder="0.00"
                 required
               />
@@ -204,7 +251,7 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
               <select
                 value={formData.month}
                 onChange={(e) => handleInputChange('month', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-900"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 bg-white text-gray-900"
                 required
               >
                 {monthOptions.map(option => (
@@ -222,10 +269,10 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
               💡 Budget Planning Tips:
             </p>
             <div className="text-xs text-blue-600 space-y-1">
-              <div>🎯 <strong>50/30/20 Rule:</strong> 50% needs, 30% wants, 20% savings</div>
-              <div>📊 <strong>Track Progress:</strong> Monitor spending vs budget</div>
+              <div>🎯 <strong>Category Budget:</strong> Set limits for specific categories</div>
+              <div>📊 <strong>Total Budget:</strong> Set overall monthly spending limit</div>
               <div>⚠️ <strong>Alerts:</strong> Get notified at 80% usage</div>
-              <div>📈 <strong>Adjust:</strong> Review and update monthly</div>
+              <div>📈 <strong>50/30/20 Rule:</strong> 50% needs, 30% wants, 20% savings</div>
             </div>
           </div>
           
@@ -234,14 +281,14 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors duration-150"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={!formData.category || !formData.amount || !formData.month || isSubmitting}
-              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center"
+              disabled={(!formData.category && budgetType === 'specific') || !formData.amount || !formData.month || isSubmitting}
+              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 flex items-center justify-center"
             >
               {isSubmitting ? (
                 <>
