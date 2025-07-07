@@ -530,6 +530,27 @@ const MainApp = () => {
     setShowAddAnimation(false); // Hide animation when user clicks
   };
 
+  const handleOpenAddIncomeModal = () => {
+    setIsAddIncomeModalOpen(true);
+  };
+
+  const handleOpenAddBudgetModal = () => {
+    setIsBudgetModalOpen(true);
+  };
+
+  // Navigation handlers for dashboard cards
+  const handleViewIncomeDetails = () => {
+    setCurrentView('income');
+  };
+
+  const handleViewExpenseDetails = () => {
+    setCurrentView('expenses');
+  };
+
+  const handleViewBudgetDetails = () => {
+    setCurrentView('budgets');
+  };
+
   // Filter expenses based on time and search
   const filteredExpenses = filterExpensesByTime(expenses, timeFilter);
 
@@ -564,12 +585,12 @@ const MainApp = () => {
       <Hero />
       
       {/* Navigation Tabs */}
-      <div className="max-w-6xl mx-auto px-4 mt-8">
-        <div className="flex items-center justify-center mb-8">
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-2 flex space-x-2">
+      <div className="max-w-6xl mx-auto px-4 mt-8 mb-6">
+        <div className="flex items-center justify-center">
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-2 flex flex-wrap gap-2 justify-center">
             <button
               onClick={() => setCurrentView('dashboard')}
-              className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium transition-all duration-300 text-sm sm:text-base ${
                 currentView === 'dashboard'
                   ? 'bg-white/20 text-white shadow-lg'
                   : 'text-white/70 hover:text-white hover:bg-white/10'
@@ -579,7 +600,7 @@ const MainApp = () => {
             </button>
             <button
               onClick={() => setCurrentView('expenses')}
-              className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium transition-all duration-300 text-sm sm:text-base ${
                 currentView === 'expenses'
                   ? 'bg-white/20 text-white shadow-lg'
                   : 'text-white/70 hover:text-white hover:bg-white/10'
@@ -589,7 +610,7 @@ const MainApp = () => {
             </button>
             <button
               onClick={() => setCurrentView('income')}
-              className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium transition-all duration-300 text-sm sm:text-base ${
                 currentView === 'income'
                   ? 'bg-white/20 text-white shadow-lg'
                   : 'text-white/70 hover:text-white hover:bg-white/10'
@@ -599,7 +620,7 @@ const MainApp = () => {
             </button>
             <button
               onClick={() => setCurrentView('budgets')}
-              className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-medium transition-all duration-300 text-sm sm:text-base ${
                 currentView === 'budgets'
                   ? 'bg-white/20 text-white shadow-lg'
                   : 'text-white/70 hover:text-white hover:bg-white/10'
@@ -621,6 +642,12 @@ const MainApp = () => {
             currency={currency}
             selectedMonth={selectedMonth}
             onMonthChange={setSelectedMonth}
+            onAddIncome={handleOpenAddIncomeModal}
+            onAddExpense={handleOpenAddExpenseModal}
+            onAddBudget={handleOpenAddBudgetModal}
+            onViewIncomeDetails={handleViewIncomeDetails}
+            onViewExpenseDetails={handleViewExpenseDetails}
+            onViewBudgetDetails={handleViewBudgetDetails}
           />
           
           <SummaryCards 
@@ -656,7 +683,7 @@ const MainApp = () => {
           currency={currency}
           onDelete={handleDeleteIncome}
           onEdit={handleOpenEditIncomeModal}
-          onAddIncome={() => setIsAddIncomeModalOpen(true)}
+          onAddIncome={handleOpenAddIncomeModal}
         />
       )}
 
@@ -668,7 +695,7 @@ const MainApp = () => {
           selectedMonth={selectedMonth}
           onEditBudget={handleOpenEditBudgetModal}
           onDeleteBudget={handleDeleteBudget}
-          onAddBudget={() => setIsBudgetModalOpen(true)}
+          onAddBudget={handleOpenAddBudgetModal}
         />
       )}
       

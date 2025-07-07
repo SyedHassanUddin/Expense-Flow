@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
-import { TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3, Calendar, Target, AlertTriangle } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3, Calendar, Target, AlertTriangle, Plus, Eye, ArrowUpRight } from 'lucide-react';
 import { Expense, Currency } from '../types/expense';
 import { Income } from '../types/income';
 import { BudgetStatus } from '../types/budget';
@@ -18,6 +18,12 @@ interface IncomeExpenseDashboardProps {
   currency: Currency;
   selectedMonth: string;
   onMonthChange: (month: string) => void;
+  onAddIncome?: () => void;
+  onAddExpense?: () => void;
+  onAddBudget?: () => void;
+  onViewIncomeDetails?: () => void;
+  onViewExpenseDetails?: () => void;
+  onViewBudgetDetails?: () => void;
 }
 
 const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
@@ -26,7 +32,13 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
   budgetStatuses,
   currency,
   selectedMonth,
-  onMonthChange
+  onMonthChange,
+  onAddIncome,
+  onAddExpense,
+  onAddBudget,
+  onViewIncomeDetails,
+  onViewExpenseDetails,
+  onViewBudgetDetails
 }) => {
   const [chartData, setChartData] = useState<any>(null);
   const [categoryData, setCategoryData] = useState<any>(null);
@@ -191,9 +203,9 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
   const warningBudgets = budgetStatuses.filter(status => status.isNearLimit);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 mt-8">
+    <div className="max-w-6xl mx-auto px-4 mt-8 mb-8">
       {/* Header with Month Selector */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h2 className="text-2xl font-bold text-white">Financial Dashboard</h2>
         <div className="flex items-center space-x-3">
           <Calendar size={20} className="text-white/70" />
@@ -246,93 +258,215 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
         </div>
       )}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Total Income */}
-        <GlassCard className="p-6 hover:scale-105 transition-all duration-300 glow-green">
+      {/* Interactive Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+        {/* Total Income Card */}
+        <GlassCard className="p-4 sm:p-6 hover:scale-105 transition-all duration-300 glow-green cursor-pointer group">
           <div className="flex items-center justify-between mb-4">
             <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-full p-3">
-              <TrendingUp size={24} className="text-white" />
+              <TrendingUp size={20} sm:size={24} className="text-white" />
             </div>
-            <span className="text-xs text-white/70 bg-green-500/20 px-2 py-1 rounded-full">
-              Income
-            </span>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-white/70 bg-green-500/20 px-2 py-1 rounded-full">
+                Income
+              </span>
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
+                {onAddIncome && (
+                  <button
+                    onClick={onAddIncome}
+                    className="p-1 bg-green-500/20 hover:bg-green-500/30 rounded-full transition-colors"
+                    title="Add Income"
+                  >
+                    <Plus size={14} className="text-green-300" />
+                  </button>
+                )}
+                {onViewIncomeDetails && (
+                  <button
+                    onClick={onViewIncomeDetails}
+                    className="p-1 bg-green-500/20 hover:bg-green-500/30 rounded-full transition-colors"
+                    title="View Details"
+                  >
+                    <Eye size={14} className="text-green-300" />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-1">
+          <h3 className="text-xl sm:text-2xl font-bold text-white mb-1">
             {formatCurrencyAmount(totalIncome, currency)}
           </h3>
-          <p className="text-white/80 text-sm">
-            {monthIncome.length} source{monthIncome.length !== 1 ? 's' : ''}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-white/80 text-sm">
+              {monthIncome.length} source{monthIncome.length !== 1 ? 's' : ''}
+            </p>
+            {totalIncome > 0 && (
+              <ArrowUpRight size={16} className="text-green-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+            )}
+          </div>
+          {totalIncome === 0 && onAddIncome && (
+            <button
+              onClick={onAddIncome}
+              className="w-full mt-3 py-2 bg-green-500/20 hover:bg-green-500/30 rounded-lg text-green-300 text-sm font-medium transition-colors"
+            >
+              Add First Income
+            </button>
+          )}
         </GlassCard>
 
-        {/* Total Expenses */}
-        <GlassCard className="p-6 hover:scale-105 transition-all duration-300 glow-red">
+        {/* Total Expenses Card */}
+        <GlassCard className="p-4 sm:p-6 hover:scale-105 transition-all duration-300 glow-red cursor-pointer group">
           <div className="flex items-center justify-between mb-4">
             <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-full p-3">
-              <TrendingDown size={24} className="text-white" />
+              <TrendingDown size={20} sm:size={24} className="text-white" />
             </div>
-            <span className="text-xs text-white/70 bg-red-500/20 px-2 py-1 rounded-full">
-              Expenses
-            </span>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-white/70 bg-red-500/20 px-2 py-1 rounded-full">
+                Expenses
+              </span>
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
+                {onAddExpense && (
+                  <button
+                    onClick={onAddExpense}
+                    className="p-1 bg-red-500/20 hover:bg-red-500/30 rounded-full transition-colors"
+                    title="Add Expense"
+                  >
+                    <Plus size={14} className="text-red-300" />
+                  </button>
+                )}
+                {onViewExpenseDetails && (
+                  <button
+                    onClick={onViewExpenseDetails}
+                    className="p-1 bg-red-500/20 hover:bg-red-500/30 rounded-full transition-colors"
+                    title="View Details"
+                  >
+                    <Eye size={14} className="text-red-300" />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-1">
+          <h3 className="text-xl sm:text-2xl font-bold text-white mb-1">
             {formatCurrencyAmount(totalExpenses, currency)}
           </h3>
-          <p className="text-white/80 text-sm">
-            {monthExpenses.length} transaction{monthExpenses.length !== 1 ? 's' : ''}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-white/80 text-sm">
+              {monthExpenses.length} transaction{monthExpenses.length !== 1 ? 's' : ''}
+            </p>
+            {totalExpenses > 0 && (
+              <ArrowUpRight size={16} className="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+            )}
+          </div>
+          {totalExpenses === 0 && onAddExpense && (
+            <button
+              onClick={onAddExpense}
+              className="w-full mt-3 py-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-300 text-sm font-medium transition-colors"
+            >
+              Add First Expense
+            </button>
+          )}
         </GlassCard>
 
-        {/* Net Savings */}
-        <GlassCard className={`p-6 hover:scale-105 transition-all duration-300 ${netSavings >= 0 ? 'glow-blue' : 'glow-red'}`}>
+        {/* Net Savings Card */}
+        <GlassCard className={`p-4 sm:p-6 hover:scale-105 transition-all duration-300 cursor-pointer group ${netSavings >= 0 ? 'glow-blue' : 'glow-red'}`}>
           <div className="flex items-center justify-between mb-4">
             <div className={`bg-gradient-to-r ${netSavings >= 0 ? 'from-blue-500 to-blue-600' : 'from-red-500 to-red-600'} rounded-full p-3`}>
-              <DollarSign size={24} className="text-white" />
+              <DollarSign size={20} sm:size={24} className="text-white" />
             </div>
-            <span className={`text-xs text-white/70 ${netSavings >= 0 ? 'bg-blue-500/20' : 'bg-red-500/20'} px-2 py-1 rounded-full`}>
-              {netSavings >= 0 ? 'Savings' : 'Deficit'}
-            </span>
+            <div className="flex items-center space-x-2">
+              <span className={`text-xs text-white/70 ${netSavings >= 0 ? 'bg-blue-500/20' : 'bg-red-500/20'} px-2 py-1 rounded-full`}>
+                {netSavings >= 0 ? 'Savings' : 'Deficit'}
+              </span>
+              {(totalIncome > 0 || totalExpenses > 0) && (
+                <ArrowUpRight size={16} className={`${netSavings >= 0 ? 'text-blue-400' : 'text-red-400'} opacity-0 group-hover:opacity-100 transition-opacity`} />
+              )}
+            </div>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-1">
+          <h3 className="text-xl sm:text-2xl font-bold text-white mb-1">
             {formatCurrencyAmount(Math.abs(netSavings), currency)}
           </h3>
-          <p className="text-white/80 text-sm">
-            {savingsRate.toFixed(1)}% of income
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-white/80 text-sm">
+              {savingsRate.toFixed(1)}% of income
+            </p>
+            {netSavings < 0 && (
+              <span className="text-xs text-red-300 bg-red-500/20 px-2 py-1 rounded-full">
+                Over Budget
+              </span>
+            )}
+          </div>
+          {totalIncome === 0 && totalExpenses === 0 && (
+            <div className="mt-3 text-center">
+              <p className="text-white/60 text-xs">Add income and expenses to see savings</p>
+            </div>
+          )}
         </GlassCard>
 
-        {/* Budget Status */}
-        <GlassCard className="p-6 hover:scale-105 transition-all duration-300 glow-purple">
+        {/* Budget Status Card */}
+        <GlassCard className="p-4 sm:p-6 hover:scale-105 transition-all duration-300 glow-purple cursor-pointer group">
           <div className="flex items-center justify-between mb-4">
             <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-full p-3">
-              <Target size={24} className="text-white" />
+              <Target size={20} sm:size={24} className="text-white" />
             </div>
-            <span className="text-xs text-white/70 bg-purple-500/20 px-2 py-1 rounded-full">
-              Budgets
-            </span>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-white/70 bg-purple-500/20 px-2 py-1 rounded-full">
+                Budgets
+              </span>
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
+                {onAddBudget && (
+                  <button
+                    onClick={onAddBudget}
+                    className="p-1 bg-purple-500/20 hover:bg-purple-500/30 rounded-full transition-colors"
+                    title="Add Budget"
+                  >
+                    <Plus size={14} className="text-purple-300" />
+                  </button>
+                )}
+                {onViewBudgetDetails && (
+                  <button
+                    onClick={onViewBudgetDetails}
+                    className="p-1 bg-purple-500/20 hover:bg-purple-500/30 rounded-full transition-colors"
+                    title="View Details"
+                  >
+                    <Eye size={14} className="text-purple-300" />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-1">
+          <h3 className="text-xl sm:text-2xl font-bold text-white mb-1">
             {budgetStatuses.length}
           </h3>
-          <p className="text-white/80 text-sm">
-            {criticalBudgets.length} over, {warningBudgets.length} warning
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-white/80 text-sm">
+              {criticalBudgets.length} over, {warningBudgets.length} warning
+            </p>
+            {budgetStatuses.length > 0 && (
+              <ArrowUpRight size={16} className="text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+            )}
+          </div>
+          {budgetStatuses.length === 0 && onAddBudget && (
+            <button
+              onClick={onAddBudget}
+              className="w-full mt-3 py-2 bg-purple-500/20 hover:bg-purple-500/30 rounded-lg text-purple-300 text-sm font-medium transition-colors"
+            >
+              Set First Budget
+            </button>
+          )}
         </GlassCard>
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
         {/* Income vs Expenses Bar Chart */}
-        <GlassCard className="p-6 hover:scale-105 transition-all duration-300">
+        <GlassCard className="p-4 sm:p-6 hover:scale-105 transition-all duration-300">
           <div className="flex items-center mb-6">
             <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-full p-3 mr-4">
-              <BarChart3 size={24} className="text-white" />
+              <BarChart3 size={20} sm:size={24} className="text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-white">Income vs Expenses</h3>
+            <h3 className="text-lg sm:text-xl font-semibold text-white">Income vs Expenses</h3>
           </div>
           
-          <div className="h-64">
+          <div className="h-48 sm:h-64">
             {chartData && <Bar data={chartData} options={chartOptions} />}
           </div>
           
@@ -344,15 +478,15 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
         </GlassCard>
 
         {/* Category Breakdown Pie Chart */}
-        <GlassCard className="p-6 hover:scale-105 transition-all duration-300">
+        <GlassCard className="p-4 sm:p-6 hover:scale-105 transition-all duration-300">
           <div className="flex items-center mb-6">
             <div className="bg-gradient-to-r from-orange-500 to-pink-600 rounded-full p-3 mr-4">
-              <PieChart size={24} className="text-white" />
+              <PieChart size={20} sm:size={24} className="text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-white">Expense Categories</h3>
+            <h3 className="text-lg sm:text-xl font-semibold text-white">Expense Categories</h3>
           </div>
           
-          <div className="h-64">
+          <div className="h-48 sm:h-64">
             {categoryData && totalExpenses > 0 ? (
               <Doughnut data={categoryData} options={pieOptions} />
             ) : (
@@ -360,6 +494,14 @@ const IncomeExpenseDashboard: React.FC<IncomeExpenseDashboardProps> = ({
                 <div className="text-center">
                   <PieChart size={48} className="mx-auto mb-2 opacity-50" />
                   <p>No expenses for this month</p>
+                  {onAddExpense && (
+                    <button
+                      onClick={onAddExpense}
+                      className="mt-3 px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 rounded-lg text-orange-300 text-sm font-medium transition-colors"
+                    >
+                      Add First Expense
+                    </button>
+                  )}
                 </div>
               </div>
             )}

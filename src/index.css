@@ -139,6 +139,10 @@
     box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
   }
 
+  .glow-red {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+  }
+
   /* Enhanced scrollbar styles */
   .scrollbar-thin {
     scrollbar-width: thin;
@@ -266,10 +270,83 @@
   .animate-pulse-soft {
     animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
+
+  /* Mobile responsive improvements */
+  @media (max-width: 640px) {
+    .glass-card {
+      @apply mx-2;
+    }
+    
+    /* Ensure proper spacing on mobile */
+    .container-mobile {
+      @apply px-3;
+    }
+    
+    /* Better touch targets */
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Improved text sizing for mobile */
+    .text-responsive {
+      @apply text-sm sm:text-base;
+    }
+    
+    /* Better button spacing on mobile */
+    .btn-mobile {
+      @apply px-3 py-2 text-sm;
+    }
+  }
+
+  /* Prevent horizontal scroll on mobile */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Better focus states for accessibility */
+  .focus-visible:focus-visible {
+    @apply outline-2 outline-offset-2 outline-blue-500;
+  }
+
+  /* Improved card hover states */
+  .card-hover {
+    @apply transition-all duration-300 hover:scale-105 hover:shadow-2xl;
+  }
+
+  /* Better spacing for mobile navigation */
+  .nav-mobile {
+    @apply flex-wrap gap-2 justify-center;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  
+  /* Mobile-first responsive utilities */
+  .container-responsive {
+    @apply max-w-6xl mx-auto px-3 sm:px-4 lg:px-6;
+  }
+  
+  .grid-responsive {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6;
+  }
+  
+  .text-responsive-lg {
+    @apply text-lg sm:text-xl lg:text-2xl;
+  }
+  
+  .text-responsive-xl {
+    @apply text-xl sm:text-2xl lg:text-3xl;
+  }
+  
+  .p-responsive {
+    @apply p-3 sm:p-4 lg:p-6;
+  }
+  
+  .m-responsive {
+    @apply m-3 sm:m-4 lg:m-6;
   }
 }
