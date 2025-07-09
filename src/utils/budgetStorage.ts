@@ -1,6 +1,6 @@
 import { Budget } from '../types/budget';
 
-const BUDGET_STORAGE_KEY = 'expenseflow-budgets';
+const BUDGET_STORAGE_KEY = 'quantiv-budgets';
 
 export function saveBudgets(budgets: Budget[]): void {
   try {
@@ -12,6 +12,13 @@ export function saveBudgets(budgets: Budget[]): void {
 
 export function loadBudgets(): Budget[] {
   try {
+    // Check for old ExpenseFlow data and migrate
+    const oldData = localStorage.getItem('expenseflow-budgets');
+    if (oldData && !localStorage.getItem(BUDGET_STORAGE_KEY)) {
+      localStorage.setItem(BUDGET_STORAGE_KEY, oldData);
+      localStorage.removeItem('expenseflow-budgets');
+    }
+    
     const stored = localStorage.getItem(BUDGET_STORAGE_KEY);
     if (stored) {
       return JSON.parse(stored);

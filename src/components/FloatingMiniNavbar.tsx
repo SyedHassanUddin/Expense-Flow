@@ -50,7 +50,7 @@ const FloatingMiniNavbar: React.FC<FloatingMiniNavbarProps> = ({
   };
 
   return (
-    <div className="fixed bottom-6 left-6 z-50 flex items-center space-x-3" ref={dropdownRef}>
+    <div className="fixed bottom-8 right-8 z-50 flex items-center space-x-3" ref={dropdownRef}>
       {/* Time Filter Button */}
       <div className="relative">
         <button

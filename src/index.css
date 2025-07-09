@@ -197,7 +197,7 @@
   /* Fast transitions for all interactive elements */
   * {
     transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, backdrop-filter;
-    transition-duration: 150ms;
+    transition-duration: 100ms;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -321,11 +321,11 @@
 
   /* Fast animations */
   .animate-fast {
-    animation-duration: 0.15s;
+    animation-duration: 0.1s;
   }
 
   .transition-fast {
-    transition-duration: 0.15s;
+    transition-duration: 0.1s;
   }
 
   /* Faster float animation */
@@ -339,11 +339,11 @@
   }
 
   .animate-float {
-    animation: float 3s ease-in-out infinite;
+    animation: float 2s ease-in-out infinite;
   }
 
   .animate-float-delay {
-    animation: float 3s ease-in-out infinite 1s;
+    animation: float 2s ease-in-out infinite 0.5s;
   }
 
   /* Faster shimmer */
@@ -357,7 +357,7 @@
   }
 
   .animate-shimmer {
-    animation: shimmer 1.5s linear infinite;
+    animation: shimmer 1s linear infinite;
   }
 }
 

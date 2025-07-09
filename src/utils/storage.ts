@@ -1,6 +1,6 @@
 import { Expense } from '../types/expense';
 
-const STORAGE_KEY = 'expenseflow-expenses';
+const STORAGE_KEY = 'quantiv-expenses';
 
 export function saveExpenses(expenses: Expense[]): void {
   try {
@@ -12,6 +12,13 @@ export function saveExpenses(expenses: Expense[]): void {
 
 export function loadExpenses(): Expense[] {
   try {
+    // Check for old ExpenseFlow data and migrate
+    const oldData = localStorage.getItem('expenseflow-expenses');
+    if (oldData && !localStorage.getItem(STORAGE_KEY)) {
+      localStorage.setItem(STORAGE_KEY, oldData);
+      localStorage.removeItem('expenseflow-expenses');
+    }
+    
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       return JSON.parse(stored);

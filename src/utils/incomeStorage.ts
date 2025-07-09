@@ -1,6 +1,6 @@
 import { Income } from '../types/income';
 
-const INCOME_STORAGE_KEY = 'expenseflow-income';
+const INCOME_STORAGE_KEY = 'quantiv-income';
 
 export function saveIncome(income: Income[]): void {
   try {
@@ -12,6 +12,13 @@ export function saveIncome(income: Income[]): void {
 
 export function loadIncome(): Income[] {
   try {
+    // Check for old ExpenseFlow data and migrate
+    const oldData = localStorage.getItem('expenseflow-income');
+    if (oldData && !localStorage.getItem(INCOME_STORAGE_KEY)) {
+      localStorage.setItem(INCOME_STORAGE_KEY, oldData);
+      localStorage.removeItem('expenseflow-income');
+    }
+    
     const stored = localStorage.getItem(INCOME_STORAGE_KEY);
     if (stored) {
       return JSON.parse(stored);

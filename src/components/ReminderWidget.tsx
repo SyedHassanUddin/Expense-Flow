@@ -11,7 +11,17 @@ const ReminderWidget: React.FC<ReminderWidgetProps> = ({ onAddExpense }) => {
 
   useEffect(() => {
     // Check if reminder was dismissed today
-    const dismissedDate = localStorage.getItem('expense-reminder-dismissed');
+    // Check for old ExpenseFlow data and migrate
+    const oldKey = 'expense-reminder-dismissed';
+    const newKey = 'quantiv-reminder-dismissed';
+    const oldData = localStorage.getItem(oldKey);
+    
+    if (oldData && !localStorage.getItem(newKey)) {
+      localStorage.setItem(newKey, oldData);
+      localStorage.removeItem(oldKey);
+    }
+    
+    const dismissedDate = localStorage.getItem(newKey);
     const today = new Date().toDateString();
     
     if (dismissedDate !== today) {
@@ -30,7 +40,7 @@ const ReminderWidget: React.FC<ReminderWidgetProps> = ({ onAddExpense }) => {
     setIsVisible(false);
     setIsDismissed(true);
     // Remember dismissal for today
-    localStorage.setItem('expense-reminder-dismissed', new Date().toDateString());
+    localStorage.setItem('quantiv-reminder-dismissed', new Date().toDateString());
   };
 
   const handleAddExpense = () => {

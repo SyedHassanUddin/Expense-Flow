@@ -46,7 +46,16 @@ export const defaultCategories = [
 // Get custom categories from localStorage
 export function getCustomCategories(): string[] {
   try {
-    const stored = localStorage.getItem('expenseflow-custom-categories');
+    // Check for old ExpenseFlow data and migrate
+    const oldData = localStorage.getItem('expenseflow-custom-categories');
+    const newKey = 'quantiv-custom-categories';
+    
+    if (oldData && !localStorage.getItem(newKey)) {
+      localStorage.setItem(newKey, oldData);
+      localStorage.removeItem('expenseflow-custom-categories');
+    }
+    
+    const stored = localStorage.getItem(newKey);
     return stored ? JSON.parse(stored) : [];
   } catch (error) {
     console.error('Failed to load custom categories:', error);
@@ -57,7 +66,7 @@ export function getCustomCategories(): string[] {
 // Save custom categories to localStorage
 export function saveCustomCategories(categories: string[]): void {
   try {
-    localStorage.setItem('expenseflow-custom-categories', JSON.stringify(categories));
+    localStorage.setItem('quantiv-custom-categories', JSON.stringify(categories));
   } catch (error) {
     console.error('Failed to save custom categories:', error);
   }

@@ -199,6 +199,18 @@ const FeatureGuide: React.FC = () => {
             <h3 className="text-lg sm:text-xl font-bold text-white">🚀 Quick Start Guide</h3>
           </div>
           
+          <div className="mb-4 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+            <p className="text-xs text-blue-600 font-medium mb-1">
+              💡 Quick Input Options:
+            </p>
+            <div className="text-xs text-blue-600 space-y-1">
+              <div>🎤 <strong>Voice:</strong> "Pizza 200 rupees today"</div>
+              <div>📷 <strong>Camera:</strong> Take photo of receipt</div>
+              <div>📤 <strong>Upload:</strong> Select receipt from gallery</div>
+              <div>📅 <strong>Date:</strong> Quick select or custom date picker</div>
+            </div>
+          </div>
+          
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             {quickStartSteps.map((step) => (
               <div key={step.id} className="bg-white/5 rounded-xl p-4 border border-white/10">
@@ -263,7 +275,7 @@ const FeatureGuide: React.FC = () => {
             <div className="bg-gradient-to-r from-green-500 to-blue-600 rounded-full p-2 mr-3">
               <Settings size={20} className="text-white" />
             </div>
-            <h3 className="text-lg sm:text-xl font-bold text-white">🔧 Detailed Features</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-white">🔧 Quantiv Features</h3>
           </div>
           
           <div className="space-y-3">
@@ -321,7 +333,7 @@ const FeatureGuide: React.FC = () => {
         <div className="p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl border border-white/20">
           <h3 className="font-semibold text-white mb-3 flex items-center">
             <Star size={20} className="text-yellow-400 mr-2" />
-            🎯 Pro Tips for Best Experience
+            🎯 Pro Tips for Quantiv
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm text-white/80">
             <div className="flex items-center">

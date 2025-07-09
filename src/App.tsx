@@ -635,6 +635,12 @@ const MainApp = () => {
       {/* Content based on current view */}
       {currentView === 'dashboard' && (
         <>
+          <SummaryCards 
+            expenses={filteredExpenses}
+            currency={currency}
+            timeFilter={timeFilter}
+          />
+          
           <IncomeExpenseDashboard
             expenses={expenses}
             income={income}
@@ -648,12 +654,6 @@ const MainApp = () => {
             onViewIncomeDetails={handleViewIncomeDetails}
             onViewExpenseDetails={handleViewExpenseDetails}
             onViewBudgetDetails={handleViewBudgetDetails}
-          />
-          
-          <SummaryCards 
-            expenses={filteredExpenses}
-            currency={currency}
-            timeFilter={timeFilter}
           />
         </>
       )}
