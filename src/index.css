@@ -82,7 +82,7 @@
   }
 
   .animated-bg-dark {
-    background: linear-gradient(-45deg, #1a1a2e, #16213e, #0f3460, #533483);
+    background: linear-gradient(-60deg, #1a1a2e, #16213e, #0f3460, #533483);
     background-size: 400% 400%;
     animation: gradient 15s ease infinite;
   }
