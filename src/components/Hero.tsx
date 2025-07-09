@@ -15,13 +15,13 @@ const Hero: React.FC = () => {
             <TrendingUp size={40} className="text-white" />
           </div>
           <h1 className="text-5xl lg:text-7xl font-bold">
-            <span className="gradient-text dark:gradient-text-dark">Expense</span>
-            <span className="text-white/90">Flow</span>
+            <span className="gradient-text dark:gradient-text-dark">Quan</span>
+            <span className="text-white/90">tiv</span>
           </h1>
         </div>
         
         <p className="text-xl lg:text-2xl mb-10 text-white/80 max-w-4xl mx-auto leading-relaxed">
-          The smartest way to track expenses with <strong>voice commands</strong>, <strong>receipt scanning</strong>, 
+          The smartest way to track finances with <strong>voice commands</strong>, <strong>receipt scanning</strong>, 
           <strong> bank integration</strong>, and <strong>cloud sync</strong> across all your devices
         </p>
         

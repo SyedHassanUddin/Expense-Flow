@@ -11,11 +11,11 @@ const Footer: React.FC = () => {
           <div className="lg:col-span-2">
             <div className="flex items-center mb-4">
               <TrendingUp size={24} className="text-blue-400 mr-2" />
-              <span className="text-xl font-bold text-white">ExpenseFlow</span>
+              <span className="text-xl font-bold text-white">Quantiv</span>
             </div>
             
             <p className="text-white/70 mb-4 leading-relaxed">
-              The smartest way to track expenses with voice commands, receipt scanning, 
+              The smartest way to track finances with voice commands, receipt scanning, 
               bank integration, and cloud sync. Built with privacy and user experience in mind.
             </p>
             
@@ -113,7 +113,7 @@ const Footer: React.FC = () => {
         <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-white/20">
           <div className="text-center md:text-left mb-4 md:mb-0">
             <p className="text-sm text-white/50 mb-1">
-              © 2024 ExpenseFlow. All rights reserved.
+              © 2024 Quantiv. All rights reserved.
             </p>
             <p className="text-xs text-white/40">
               Open source • Privacy focused • User friendly
@@ -122,7 +122,7 @@ const Footer: React.FC = () => {
           
           <div className="text-center md:text-right">
             <p className="text-sm text-white/70">
-              Smart expense tracking for everyone
+              Smart financial tracking for everyone
             </p>
           </div>
         </div>

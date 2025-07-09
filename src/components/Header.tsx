@@ -36,7 +36,7 @@ const Header: React.FC<HeaderProps> = ({
                 <TrendingUp size={24} className="text-white" />
               </div>
               <span className="text-xl font-bold gradient-text dark:gradient-text-dark">
-                ExpenseFlow
+                Quantiv
               </span>
             </div>
 
