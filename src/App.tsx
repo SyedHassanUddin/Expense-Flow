@@ -21,6 +21,7 @@ import BudgetModal from './components/modals/BudgetModal';
 import AuthModal from './components/auth/AuthModal';
 import ReminderWidget from './components/ReminderWidget';
 import FeatureGuide from './components/FeatureGuide';
+import ControlBar from './components/ControlBar';
 import Footer from './components/Footer';
 import ConnectionStatus from './components/ConnectionStatus';
 import { Expense, Currency, TimeFilter, ExpenseFormData } from './types/expense';
@@ -585,6 +586,14 @@ const MainApp = () => {
         expenseCount={expenses.length + income.length + budgets.length}
       />
       
+      {/* Control Bar for Currency and Time Filter */}
+      <ControlBar
+        timeFilter={timeFilter}
+        onTimeFilterChange={setTimeFilter}
+        currency={currency}
+        onCurrencyChange={handleCurrencyChange}
+      />
+      
       <Hero />
       
       {/* Navigation Tabs */}
@@ -717,13 +726,7 @@ const MainApp = () => {
       />
       
       <FloatingMiniNavbar
-        timeFilter={timeFilter}
-        onTimeFilterChange={setTimeFilter}
-        currency={currency}
-        onCurrencyChange={handleCurrencyChange}
-        onExport={handleExport}
-        onClearAll={handleClearAll}
-        expenseCount={expenses.length + income.length + budgets.length}
+        onAddExpense={handleOpenAddExpenseModal}
       />
       
       {/* Modals */}
