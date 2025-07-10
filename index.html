@@ -21,7 +21,7 @@
     if (event.data && event.data.name === 'webchat-ready') {
       const chatBubble = document.querySelector('iframe[src*="webchat.botpress.cloud"]')?.parentElement;
       if (chatBubble) {
-        chatBubble.style.bottom = '80px'; // Change this value to move it up
+        chatBubble.style.bottom = '120px'; // Change this value to move it up
         chatBubble.style.right = '20px';  // Optional: you can move it left too
       }
     }
