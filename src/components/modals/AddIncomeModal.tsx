@@ -63,7 +63,10 @@ const AddIncomeModal: React.FC<AddIncomeModalProps> = ({
     
     try {
       await new Promise(resolve => setTimeout(resolve, 300)); // Simulate processing
-      onSubmit(formData);
+      onSubmit({
+        ...formData,
+        currency: currency // Ensure currency is included
+      });
       
       // Reset form
       setFormData({

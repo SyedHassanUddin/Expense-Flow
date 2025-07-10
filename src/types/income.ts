@@ -12,6 +12,7 @@ export interface IncomeFormData {
   amount: string;
   source: string;
   date: string;
+  currency?: string;
   is_recurring?: boolean;
   recurring_frequency?: 'daily' | 'weekly' | 'monthly' | 'yearly';
 }

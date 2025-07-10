@@ -100,7 +100,7 @@ const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
         description: formData.description,
         date: formData.date,
         category: formData.category,
-        currency: currency
+        currency: currency // Use current app currency
       };
       
       onSave(updatedExpense);

@@ -76,7 +76,10 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
     
     try {
       await new Promise(resolve => setTimeout(resolve, 200)); // Faster processing
-      onSubmit(formData);
+      onSubmit({
+        ...formData,
+        currency: currency // Ensure currency is included
+      });
       
       // Reset form
       setFormData({

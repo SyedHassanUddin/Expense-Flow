@@ -580,6 +580,9 @@ const MainApp = () => {
       <Header 
         user={user}
         onAuthRequired={handleAuthRequired}
+        onExport={handleExport}
+        onClearAll={handleClearAll}
+        expenseCount={expenses.length + income.length + budgets.length}
       />
       
       <Hero />

@@ -10,6 +10,7 @@ export interface BudgetFormData {
   category: string;
   amount: string;
   month: string;
+  currency?: string;
 }
 
 export interface BudgetStatus {

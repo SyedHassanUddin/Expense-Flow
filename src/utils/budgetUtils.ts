@@ -13,9 +13,17 @@ export function calculateBudgetStatus(
   });
 
   return monthBudgets.map(budget => {
-    const categoryExpenses = monthExpenses.filter(
-      expense => expense.category === budget.category
-    );
+    let categoryExpenses: Expense[];
+    
+    if (budget.category === 'Total Budget') {
+      // For total budget, include all expenses
+      categoryExpenses = monthExpenses;
+    } else {
+      // For specific category budget, filter by category
+      categoryExpenses = monthExpenses.filter(
+        expense => expense.category === budget.category
+      );
+    }
     
     const spentAmount = categoryExpenses.reduce(
       (sum, expense) => sum + expense.amount, 

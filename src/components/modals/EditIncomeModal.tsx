@@ -71,7 +71,7 @@ const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
         amount: parseFloat(formData.amount),
         source: formData.source,
         date: formData.date,
-        currency: currency,
+        currency: currency, // Use current app currency
         is_recurring: formData.is_recurring,
         recurring_frequency: formData.is_recurring ? formData.recurring_frequency : undefined
       };
