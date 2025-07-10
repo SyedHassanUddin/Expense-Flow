@@ -16,17 +16,23 @@
     <!-- ⚠️ DO NOT REMOVE THIS! Custom Chatbot Embed -->
     <script src="https://cdn.botpress.cloud/webchat/v3.1/inject.js" defer></script>
     <script src="https://files.bpcontent.cloud/2025/07/09/20/20250709201348-R0LYMAL3.js" defer></script>
-    <script>
-     window.addEventListener('message', function(event) {
-    if (event.data && event.data.name === 'webchat-ready') {
-      const chatBubble = document.querySelector('iframe[src*="webchat.botpress.cloud"]')?.parentElement;
-      if (chatBubble) {
-        chatBubble.style.bottom = '120px'; // Change this value to move it up
-        chatBubble.style.right = '60px';  // Optional: you can move it left too
-      }
+   <script>
+      window.addEventListener('message', function(event) {
+      if (event.data && event.data.name === 'webchat-ready') {
+      // Wait a moment to ensure the iframe loads into the DOM
+      setTimeout(() => {
+        const chatBubble = document.querySelector('iframe[src*="webchat.botpress.cloud"]')?.parentElement;
+        if (chatBubble) {
+          chatBubble.style.position = 'fixed';
+          chatBubble.style.bottom = '100px'; // Move up from bottom
+          chatBubble.style.right = '30px';   // Optional tweak
+          chatBubble.style.zIndex = '9999';  // Ensure it's on top
+        }
+      }, 500); // 500ms delay to ensure iframe is ready
     }
   });
 </script>
+
 
 
   </body>
