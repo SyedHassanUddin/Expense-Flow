@@ -669,11 +669,6 @@ const MainApp = () => {
             onSearchChange={setSearchTerm}
             onAddExpense={handleOpenAddExpenseModal}
           />
-          
-          <BankConnection 
-            onTransactionsImported={handleBankTransactions}
-            currency={currency}
-          />
         </>
       )}
 
@@ -698,6 +693,12 @@ const MainApp = () => {
           onAddBudget={handleOpenAddBudgetModal}
         />
       )}
+      
+      {/* Bank Integration - appears after dashboard for all views */}
+      <BankConnection 
+        onTransactionsImported={handleBankTransactions}
+        currency={currency}
+      />
       
       <ReminderWidget onAddExpense={handleOpenAddExpenseModal} />
       
